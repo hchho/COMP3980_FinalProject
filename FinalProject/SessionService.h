@@ -41,11 +41,8 @@ class SessionService {
 private:
 	CommController* commController;
 	DisplayService* dispService;
-	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
-	VOID createRFIDThread(LPTHREAD_START_ROUTINE func, LPVOID param);
-
 	INT currentMode;
-
+	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
 	VOID handleConnectMode(UINT Message, WPARAM wParam);
 public:

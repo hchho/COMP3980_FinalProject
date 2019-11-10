@@ -77,18 +77,6 @@ VOID SessionService::createThread(LPTHREAD_START_ROUTINE func, LPVOID param) {
 	}
 }
 
-VOID SessionService::createRFIDThread(LPTHREAD_START_ROUTINE func, LPVOID param) {
-	DWORD rfidThreadId;
-	HANDLE rfidThread;
-	rfidThread = CreateThread(NULL, 0, func, param, 0, &rfidThreadId);
-	if (!rfidThread) {
-		ErrorHandler::handleError(ERROR_RD_THREAD);
-	}
-	else {
-		CloseHandle(rfidThread);
-	}
-}
-
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	handleCommandMode
@@ -128,12 +116,6 @@ VOID SessionService::handleCommandMode(UINT Message, WPARAM wParam) {
 		case IDM_Connect_COM1:
 			commController->initializeConnection(TEXT("COM1"));
 			createThread(CommService::readFunc, commController);
-			currentMode = CONNECT_MODE;
-			dispService->setMenuItemState(currentMode);
-			break;
-		case IDM_Connect_RFID:
-			createThread(CommService::initializeRFIDDevice, commController);
-			createRFIDThread(CommService::readRFIDFunc, commController);
 			currentMode = CONNECT_MODE;
 			dispService->setMenuItemState(currentMode);
 			break;
