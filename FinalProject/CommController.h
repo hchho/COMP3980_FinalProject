@@ -9,9 +9,6 @@
 #include "error_codes.h"
 #include "ErrorHandler.h"
 #include "DisplayService.h"
-#include "SkyeTekAPI.h"
-#include "SkyeTekProtocol.h"
-#include <map>
 
 using namespace std;
 
@@ -49,6 +46,9 @@ using namespace std;
 --		DATE:			Oct 14, 2019
 --		REVISER:		Henry Ho & Michael Yu
 --		DESCRIPTION:	Added setIsComActive and added tag map
+--		DATE:			Nov 16, 2019
+--		REVISER:		Michael Yu
+--		DESCRIPTION:	Remove selectTagLoopCallbackFunc and all RFID-related code
 --
 -- DESIGNER:		Henry Ho
 --
@@ -61,7 +61,6 @@ using namespace std;
 ----------------------------------------------------------------------------------------------------------------------*/
 class CommController {
 private:
-	const int NUMBER_OF_TRIES = 10;
 	char OUTPUT_BUFFER[1] = { 0 };
 	HANDLE deviceConnectedEvent = CreateEvent(
 		NULL,
@@ -98,7 +97,6 @@ public:
 	VOID setCommConfig(LPCWSTR portName);
 	DWORD handleRead(LPVOID input);
 	VOID drawBufferToWindow(const char* input, char delimiter);
-	static unsigned char selectTagLoopCallbackFunc(LPSKYETEK_TAG lpTag, void* user);
 
 	// Below are inline functions for this class
 

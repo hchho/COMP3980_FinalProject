@@ -8,9 +8,6 @@
 #include "ErrorHandler.h"
 #include "CommController.h"
 
-#include "SkyeTekAPI.h"
-#include "SkyeTekProtocol.h"
-
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		CommController.cpp -	A controller class that controls all operations in the physical
 --												layer in the OSI architecture.
@@ -27,7 +24,6 @@
 --					VOID initializeConnection(void)
 --					VOID resetCommConfig(void)
 --					VOID setComPort(LPCWSTR commPortName)
---					BOOL initializeRFID(void)
 --					VOID drawBufferToWindow(const char* input)
 --
 --
@@ -75,7 +71,6 @@
 VOID CommController::closePort() {
 	if (isComActive) {
 		CloseHandle(commHandle);
-		tagsRead.clear();
 	}
 	isComActive = false;
 }

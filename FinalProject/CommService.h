@@ -11,7 +11,6 @@
 --
 -- FUNCTIONS:
 --					DWORD WINAPI readFunc(LPVOID param)
---					DWORD WINAPI readRFIDFunc(LPVOID lpParameter)
 --
 -- DATE:			Oct 11, 2019
 --
