@@ -8,9 +8,6 @@
 #include "ErrorHandler.h"
 #include "CommController.h"
 
-#include "SkyeTekAPI.h"
-#include "SkyeTekProtocol.h"
-
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		CommController.cpp -	A controller class that controls all operations in the physical
 --												layer in the OSI architecture.
@@ -27,7 +24,6 @@
 --					VOID initializeConnection(void)
 --					VOID resetCommConfig(void)
 --					VOID setComPort(LPCWSTR commPortName)
---					BOOL initializeRFID(void)
 --					VOID drawBufferToWindow(const char* input)
 --
 --
@@ -75,7 +71,6 @@
 VOID CommController::closePort() {
 	if (isComActive) {
 		CloseHandle(commHandle);
-		tagsRead.clear();
 	}
 	isComActive = false;
 }
@@ -309,70 +304,3 @@ VOID CommController::setCommConfig(LPCWSTR portName) {
 	SetCommState(commHandle, &commConfig.dcb);
 }
 
-
-/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	selectTagLoopCallbackFunc
---
--- DATE:		Oct 14, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Michael Yu
---
--- PROGRAMMER:	Michael Yu
---
--- INTERFACE:	unsigned char selectTagLoopCallbackFunc(LPSKYETEK_TAG lpTag, void* user)
---					LPSKYETEK_TAG lpTag:	the tag detected by the reader
---					void* user:				the user parameter passed to this function
---
--- RETURNS:		unsigned char
---
--- NOTES:
--- Call this function with SkyeTek_SelctTags to initate a read loop in the device. It returns 1 to continue the read
--- loop, and returns 0 to terminate the read loop.
-----------------------------------------------------------------------------------------------------------------------*/
-unsigned char CommController::selectTagLoopCallbackFunc(LPSKYETEK_TAG lpTag, void* user) {
-	CommController* commController = (CommController*)user;
-	if (commController->getIsComActive())
-	{
-		commController->processTag(lpTag);
-	}
-	return(commController->getIsComActive());
-}
-
-
-/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	processTag
---
--- DATE:		Oct 12, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Michael Yu
---
--- PROGRAMMER:	Michael Yu
---
--- INTERFACE:	void CommController::processTag(LPSKYETEK_TAG lpTag)
---					LPSKYETEK_TAG lpTag:			the tag detected by the reader
---
--- RETURNS:		unsigned char
---
--- NOTES:
--- Call this function to process the tag that was found by the reader, if it exists. If the tag does not already exist,
--- insert the ID of the tag into a map to prevent repetitive reading. Then print the type and tag ID of the tag to the
--- console window.
-----------------------------------------------------------------------------------------------------------------------*/
-void CommController::processTag(LPSKYETEK_TAG lpTag) {
-	if (lpTag != NULL)
-	{
-		_bstr_t tagBuffer(lpTag->friendly);
-		bool find = tagsRead.find(tagBuffer) == tagsRead.end();
-		if (tagsRead.find(tagBuffer) == tagsRead.end()) {
-			tagsRead.insert({ tagBuffer, 1 });
-			_bstr_t typeBuffer(SkyeTek_GetTagTypeNameFromType(lpTag->type));
-			this->drawBufferToWindow(typeBuffer += _bstr_t(" ") += tagBuffer += _bstr_t(" "), 'n');
-		}
-
-		SkyeTek_FreeTag(lpTag);
-	}
-}

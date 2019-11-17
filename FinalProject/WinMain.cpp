@@ -32,7 +32,7 @@
 -- PROGRAMMER:		Henry Ho
 --
 -- NOTES:
--- This is the file that the program seeks to run the program. 
+-- This is the file that the program seeks to run the program.
 ----------------------------------------------------------------------------------------------------------------------*/
 
 SessionService sessionService;
@@ -46,7 +46,7 @@ LRESULT CALLBACK MainProc(HWND, UINT, WPARAM, LPARAM);
 --
 -- DATE:		Sept 28, 2019
 --
--- REVISIONS:	
+-- REVISIONS:
 --		DATE:			Oct 11, 2019
 --		REVISER:		Michael Yu
 --		DESCRIPTION:	Passed displayService pointer to SessionService
@@ -93,16 +93,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspsqCmdParam
 
 	// Configure Window
 	hwnd = CreateWindow(
-		WINDOW_NAME, 
-		WINDOW_NAME, 
-		WS_OVERLAPPEDWINDOW, 
-		10, 
-		10, 
-		WINDOW_WIDTH, 
-		WINDOW_HEIGHT, 
-		NULL, 
-		NULL, 
-		hInst, 
+		WINDOW_NAME,
+		WINDOW_NAME,
+		WS_OVERLAPPEDWINDOW,
+		10,
+		10,
+		WINDOW_WIDTH,
+		WINDOW_HEIGHT,
+		NULL,
+		NULL,
+		hInst,
 		NULL
 	);
 

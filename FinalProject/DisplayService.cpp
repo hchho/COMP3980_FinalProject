@@ -161,7 +161,6 @@ HWND* DisplayService::getWindowHandle() {
 void DisplayService::setMenuItemState(int state) {
 	HMENU menu = GetMenu(*windowHandle);
 	EnableMenuItem(menu, IDM_Connect_COM1, state == CONNECT_MODE ? MF_DISABLED : MF_ENABLED);
-	EnableMenuItem(menu, IDM_Connect_RFID, state == CONNECT_MODE ? MF_DISABLED : MF_ENABLED);
-	EnableMenuItem(menu, IDM_COM1, state == CONNECT_MODE ? MF_ENABLED : MF_DISABLED);
+	EnableMenuItem(menu, IDM_COM1, state == CONNECT_MODE ? MF_DISABLED : MF_ENABLED);
 	EnableMenuItem(menu, IDM_Disconnect, state == CONNECT_MODE ? MF_ENABLED : MF_DISABLED);
 }
