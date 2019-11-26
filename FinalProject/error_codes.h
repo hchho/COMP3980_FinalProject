@@ -3,4 +3,5 @@
 #define ERROR_OPEN_PORT			902
 #define ERROR_PORT_PROP			903
 #define ERROR_COM_STATE_NULL	904
+#define ERROR_OPEN_FILE			905
 

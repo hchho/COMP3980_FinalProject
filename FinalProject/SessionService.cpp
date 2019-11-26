@@ -230,7 +230,7 @@ VOID SessionService::handleProcess(UINT Message, WPARAM wParam) {
 DWORD SessionService::readFile(LPVOID input) {
 	HANDLE hFile;
 	DWORD dwBytesRead;
-	LPCWSTR fileName = TEXT("sample\\sample.txt");
+	LPCWSTR fileName = TEXT("sample\\sample.txt"); // This will have to be defined by user
 	hFile = CreateFile(
 		fileName, 
 		GENERIC_READ, 
@@ -243,13 +243,14 @@ DWORD SessionService::readFile(LPVOID input) {
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		printf("Terminal failure: Unable to open file \"%s\" for write.\n", fileName);
+		ErrorHandler::handleError(ERROR_OPEN_FILE);
 		return 0;
 	}
 
-	char ReadBuffer[2] = { 0 };
+	char ReadBuffer[1017] = { 0 }; // The buffer size should be defined somewhere
 
-	while (ReadFile(hFile, ReadBuffer, 2, &dwBytesRead, NULL)) {
+	//It should equal the buffer size - 1 to give room for null character
+	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
 		if (dwBytesRead == 0) {
 			break;
 		}
