@@ -195,6 +195,7 @@ VOID CommController::handleWrite(WPARAM* input) {
 DWORD CommController::handleRead(LPVOID input) {
 	COMSTAT cs;
 	DWORD bytesReceived, endTime, lastError;
+	DWORD dwEvent, dwError;
 	char inputBuffer[1];
 	OVERLAPPED overlapRead;
 
@@ -202,27 +203,38 @@ DWORD CommController::handleRead(LPVOID input) {
 	overlapRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	overlapRead.Offset = 0;
 	overlapRead.OffsetHigh = 0;
-
+	
+	// Sets Comm Mask
+	if (!SetCommMask(commHandle, EV_RXCHAR)) {
+		MessageBox(NULL, (LPCWSTR)"SetCommMask failed.", (LPCWSTR)"Error", MB_OK);
+	}
 	while (isComActive) {
-		if (!ReadFile(commHandle, inputBuffer, 1, &bytesReceived, &overlapRead)) {
-			bytesReceived = 0;
-			if ((lastError = GetLastError()) == ERROR_IO_PENDING &&
-				GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, FALSE) &&
-				bytesReceived) {
-				drawSingleCharToWindow(*inputBuffer);
+		if (WaitCommEvent(commHandle, &dwEvent, 0)) {
+			ClearCommError(commHandle, &dwError, &cs);
+			if ((dwEvent & EV_RXCHAR) && cs.cbInQue) {
+				if (!ReadFile(commHandle, inputBuffer, 1, &bytesReceived, &overlapRead)) {
+					bytesReceived = 0;
+					if ((lastError = GetLastError()) == ERROR_IO_PENDING &&
+						GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
+						bytesReceived) {
+						drawSingleCharToWindow(*inputBuffer);
+					}
+					else {
+						ClearCommError(commHandle, &lastError, &cs);
+						lastError = 0;
+					}
+				}
+				else {
+					if (cs.cbInQue) {
+						if (bytesReceived) {
+							drawSingleCharToWindow(*inputBuffer);
+						}
+					}
+				}
 			}
-			else {
-				ClearCommError(commHandle, &lastError, &cs);
-				lastError = 0;
+			if (overlapRead.hEvent) {
+				ResetEvent(overlapRead.hEvent);
 			}
-		}
-		else {
-			if (bytesReceived) {
-				drawSingleCharToWindow(*inputBuffer);
-			}
-		}
-		if (overlapRead.hEvent) {
-			ResetEvent(overlapRead.hEvent);
 		}
 	}
 	PurgeComm(commHandle, PURGE_RXCLEAR);
