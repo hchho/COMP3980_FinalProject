@@ -4,7 +4,8 @@
 #include "modes.h"
 #include "CommController.h"
 #include "DisplayService.h"
-
+#include "StateController.h"
+#include "Events.h"
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		SessionService.h -	A class that handles all session level events according to the OSI network
 --										architecture.
@@ -42,6 +43,7 @@ private:
 	CommController* commController;
 	DisplayService* dispService;
 	INT currentMode;
+	Events events;
 	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
 	VOID handleConnectMode(UINT Message, WPARAM wParam);
@@ -51,4 +53,7 @@ public:
 		currentMode = COMMAND_MODE;
 	};
 	VOID handleProcess(UINT Message, WPARAM wParam);
+	HANDLE writeThread;
+	HANDLE readThread;
+	Events getEvents() { return events; };
 };

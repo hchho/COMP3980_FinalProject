@@ -97,6 +97,7 @@ public:
 	VOID setCommConfig(LPCWSTR portName);
 	DWORD handleRead(LPVOID input);
 	VOID drawBufferToWindow(const char* input, char delimiter);
+	void sendCommunicationMessage(DWORD event);
 
 	// Below are inline functions for this class
 
