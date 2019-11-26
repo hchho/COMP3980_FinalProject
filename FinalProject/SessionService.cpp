@@ -231,16 +231,20 @@ DWORD SessionService::readFile(LPVOID input) {
 	HANDLE hFile;
 	DWORD dwBytesRead;
 	CONST UINT MAX_PATH_SIZE = 128;
+	CONST UINT MAX_FILE_SIZE = 64000000; // 64 MB file size
 	wchar_t filename[MAX_PATH_SIZE];
 	OPENFILENAME ofn;
+
 	RtlZeroMemory(&filename, sizeof(filename));
 	ZeroMemory(&ofn, sizeof(ofn));
+
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = NULL;  // If you have a window to center over, put its HANDLE here
 	ofn.lpstrFilter = TEXT("Text Files\0*.txt\0Any File\0*.*\0");
 	ofn.lpstrFile = filename;
-	ofn.nMaxFile = 64000000; // Max file size we can send. 64 megabytes
+	ofn.nMaxFile = MAX_FILE_SIZE;
 	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
+
 	if (!GetOpenFileName(&ofn)) {
 		ErrorHandler::handleError(ERROR_OPEN_FILE);
 		return 0;
