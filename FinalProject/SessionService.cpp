@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdlib.h>
 #include <windows.h>
 #include "error_codes.h"
@@ -167,6 +168,9 @@ VOID SessionService::handleConnectMode(UINT Message, WPARAM wParam) {
 			currentMode = COMMAND_MODE;
 			dispService->setMenuItemState(true);
 			break;
+		case IDM_Upload:
+			createThread(SessionService::readFunc, this);
+			break;
 		case IDM_HELP:
 			DisplayService::displayMessageBox("Press <ESC> to disconnect.");
 			break;
@@ -221,4 +225,38 @@ VOID SessionService::handleProcess(UINT Message, WPARAM wParam) {
 	default:
 		break;
 	}
+}
+
+DWORD SessionService::readFile(LPVOID input) {
+	HANDLE hFile;
+	DWORD dwBytesRead;
+	LPCWSTR fileName = TEXT("sample\\sample.txt");
+	hFile = CreateFile(
+		fileName, 
+		GENERIC_READ, 
+		0, 
+		NULL, 
+		OPEN_EXISTING, 
+		FILE_ATTRIBUTE_NORMAL, 
+		NULL
+	);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		printf("Terminal failure: Unable to open file \"%s\" for write.\n", fileName);
+		return 0;
+	}
+
+	char ReadBuffer[2] = { 0 };
+
+	while (ReadFile(hFile, ReadBuffer, 2, &dwBytesRead, NULL)) {
+		if (dwBytesRead == 0) {
+			break;
+		}
+		std::cout << ReadBuffer << std::endl;
+		std::cout << dwBytesRead << std::endl;
+	}
+
+	CloseHandle(hFile);
+	return 0;
 }

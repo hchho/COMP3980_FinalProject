@@ -45,7 +45,11 @@ private:
 	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
 	VOID handleConnectMode(UINT Message, WPARAM wParam);
+	DWORD readFile(LPVOID input);
 public:
+	static DWORD WINAPI readFunc(LPVOID param) {
+		return ((SessionService*)param)->readFile(0);
+	}
 	SessionService() {};
 	SessionService(CommController* controller, DisplayService* dispService) : commController(controller), dispService(dispService) {
 		currentMode = COMMAND_MODE;
