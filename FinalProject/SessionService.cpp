@@ -230,9 +230,24 @@ VOID SessionService::handleProcess(UINT Message, WPARAM wParam) {
 DWORD SessionService::readFile(LPVOID input) {
 	HANDLE hFile;
 	DWORD dwBytesRead;
-	LPCWSTR fileName = TEXT("sample\\sample.txt"); // This will have to be defined by user
+	CONST UINT MAX_PATH_SIZE = 128;
+	wchar_t filename[MAX_PATH_SIZE];
+	OPENFILENAME ofn;
+	RtlZeroMemory(&filename, sizeof(filename));
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL;  // If you have a window to center over, put its HANDLE here
+	ofn.lpstrFilter = TEXT("Text Files\0*.txt\0Any File\0*.*\0");
+	ofn.lpstrFile = filename;
+	ofn.nMaxFile = 64000000; // Max file size we can send. 64 megabytes
+	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
+	if (!GetOpenFileName(&ofn)) {
+		ErrorHandler::handleError(ERROR_OPEN_FILE);
+		return 0;
+	}
+
 	hFile = CreateFile(
-		fileName, 
+		filename, 
 		GENERIC_READ, 
 		0, 
 		NULL, 
