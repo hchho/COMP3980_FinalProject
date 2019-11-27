@@ -2,7 +2,7 @@
 #include <Windows.h>
 
 struct Events {
-	DWORD receivedFrame{ 0 };
-	DWORD emptyBuffer{ 0 };
+	HANDLE receivedFrame{ 0 };
+	HANDLE emptyBuffer{ 0 };
 
 };
