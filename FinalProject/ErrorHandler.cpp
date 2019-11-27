@@ -1,11 +1,13 @@
 #include "ErrorHandler.h"
 #include "C:\Users\chira\Downloads\boost_1_71_0\boost\crc.hpp"
+#include "C:\Users\chira\Downloads\boost_1_71_0\boost\"
+#include <string>
 
 using namespace std;
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	checkSumCalculator
 --
--- DATE:		Sept 28, 2019
+-- DATE:		Nov 27, 2019
 --
 -- REVISIONS:	(N/A)
 --
@@ -36,7 +38,7 @@ int checkSumCalculator(char * content) {
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	checksumMatch
 --
--- DATE:		Sept 28, 2019
+-- DATE:		Nov 27, 2019
 --
 -- REVISIONS:	(N/A)
 --
@@ -67,9 +69,9 @@ bool checksumMatch(int checksum, char * header) {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	hexadecimalToDecimal
+-- FUNCTION:	convertCharArrayToInteger
 --
--- DATE:		Sept 28, 2019
+-- DATE:		Nov 27, 2019
 --
 -- REVISIONS:	(N/A)
 --
@@ -77,14 +79,14 @@ bool checksumMatch(int checksum, char * header) {
 --
 -- PROGRAMMER:	Chirag Fernandez
 --
--- INTERFACE:	hexadecimalToDecimal(char * hexVal)
---					char* hexVal:	a pointer to a char array containing a hexadecimal number
+-- INTERFACE:	convertCharArrayToInteger(char* header)
+--					char* header:	a pointer to a the position of the check sequence within the frame
 --					
 --
 -- RETURNS:		int
 --
 -- NOTES:
--- Call this function to convert a hexadecimal number to decimal format.
+-- Call this function to convert a binary number to decimal format.
 ----------------------------------------------------------------------------------------------------------------------*/
 int convertCharArrayToInteger(char* header) {
 
@@ -102,6 +104,8 @@ int convertCharArrayToInteger(char* header) {
         }
 
         string s(byteArray);
+
+		// Lexical cast in this case converts a binary string into it's corresponding integer value.
         decToSum[i] = boost::lexical_cast<int>(s);
 
     }
