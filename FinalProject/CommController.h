@@ -97,8 +97,8 @@ public:
 	VOID setCommConfig(LPCWSTR portName);
 	DWORD handleRead(LPVOID input);
 	VOID drawBufferToWindow(const char* input, char delimiter);
-	void sendCommunicationMessage(DWORD event);
-
+	VOID sendMessage(char* dataToSend); // public accessible API to send data. This one for frame
+	VOID sendMessage(char dataToSend); // public accessible API to send data. This one for control code
 	// Below are inline functions for this class
 
 	/*------------------------------------------------------------------------------------------------------------------

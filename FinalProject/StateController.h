@@ -24,7 +24,7 @@ private:
 	// 
 	void handleControlCode(char* code);
 	void setState(STATES state) { this->state = state; };
-
+	void sendCommunicationMessage(DWORD event);
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
@@ -33,7 +33,6 @@ public:
 	void handleWrite();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
-
-
+	
 };
 #endif

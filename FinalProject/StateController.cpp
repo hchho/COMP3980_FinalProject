@@ -25,7 +25,7 @@ void StateController::handleWrite() {
 			// If current state is RTR and reading thread receives a frame, send ACK or REQ
 			// inside the comm message, we will check if the current system has something to send
 			if (state == STATES::RTR) {
-				comm->sendCommunicationMessage(sessionService->getEvents().receivedFrame);
+				sendCommunicationMessage(sessionService->getEvents().receivedFrame);
 			}
 			else if (state == STATES::RTS) {
 				// condition for empty write buffer to send EOT
@@ -39,10 +39,6 @@ void StateController::handleWrite() {
 		}
 	}
 }
-
-
-
-
 
 void StateController::handleInput(char* input)
 {
@@ -72,3 +68,57 @@ void StateController::handleInput(char* input)
 	}
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	sendCommunicationMessage
+--
+-- DATE:		Nov 26, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Henry Ho
+--
+-- INTERFACE:
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write a control message to the port. 
+----------------------------------------------------------------------------------------------------------------------*/
+void StateController::sendCommunicationMessage(DWORD event) {
+	switch (event) {
+	case 0: //IDLE_FILE_INPUT
+	case 5: //RTR_FILE_INPUT
+		if (state == IDLE) {
+			comm->sendMessage(ENQ);
+			setState(PREP_TX);
+		}
+		else if (state == RX) {
+			comm->sendMessage(REQ0); 
+		}
+		break;
+	case 1: //IDLE_RECEIVE_ENQ
+		if (outputBuffer == nullptr) { //output buffer is empty
+			comm->sendMessage(ACK0); // This should either be ACK0 or ACK1
+		}
+		break;
+	case 6: //RTR_RECEIVE_FRAME
+		//Perform CRC Validation on received data
+		if (true) { // frame is valid
+			comm->sendMessage(ACK0); // This should either be ACK0 or ACK1
+		}
+		else {
+			inputBuffer = { 0 }; // Clear input buffer. Discard frame
+		}
+		break;
+	case 8: //RTS_DONE_SENDING 
+		if (state == RTS) {
+			comm->sendMessage(EOT);
+			setState(IDLE);
+		}
+		break;
+	default:
+		return;
+	}
+}
