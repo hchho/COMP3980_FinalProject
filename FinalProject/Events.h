@@ -2,7 +2,16 @@
 #include <Windows.h>
 
 struct Events {
-	DWORD receivedFrame{ 0 };
-	DWORD emptyBuffer{ 0 };
+	HANDLE IDLE_RECEIVE_ENQ{ 0 };
+	HANDLE IDLE_FILE_INPUT{ 0 };
 
+	// To set state to RTS
+	HANDLE PREP_TX{ 0 };
+
+	HANDLE TX_RECEIVE_ACK{ 0 };
+	HANDLE TX_RECEIVE_REQ{ 0 };
+
+	HANDLE RTR_RECEIVE_FRAME{ 0 };
+	HANDLE RTR_RECEIVE_EOT{ 0 };
+	HANDLE RTR_FILE_INPUT{ 0 };
 };

@@ -18,7 +18,7 @@ void StateController::drawBufferToWindow(const char* buff)
 
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
 void StateController::handleWrite() {
-	DWORD dwEvent{ 0 };
+	HANDLE dwEvent{ 0 };
 
 	while (comm->getIsComActive) {
 		if (WaitCommEvent(sessionService->readThread, &dwEvent, 0)) {
