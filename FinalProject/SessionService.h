@@ -43,7 +43,6 @@ private:
 	CommController* commController;
 	DisplayService* dispService;
 	INT currentMode;
-	Events events;
 	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
 	VOID handleConnectMode(UINT Message, WPARAM wParam);
@@ -55,5 +54,4 @@ public:
 	VOID handleProcess(UINT Message, WPARAM wParam);
 	HANDLE writeThread;
 	HANDLE readThread;
-	Events getEvents() { return events; };
 };

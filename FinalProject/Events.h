@@ -1,9 +1,12 @@
 #pragma once
 #include <Windows.h>
 
+constexpr static int EVENT_COUNTS = 8;
+
 struct Events {
-	HANDLE IDLE_RECEIVE_ENQ{ 0 };
+
 	HANDLE IDLE_FILE_INPUT{ 0 };
+	HANDLE IDLE_RECEIVE_ENQ{ 0 };
 
 	// To set state to RTS
 	HANDLE PREP_TX{ 0 };
@@ -11,7 +14,19 @@ struct Events {
 	HANDLE TX_RECEIVE_ACK{ 0 };
 	HANDLE TX_RECEIVE_REQ{ 0 };
 
+	HANDLE RTR_FILE_INPUT{ 0 };
 	HANDLE RTR_RECEIVE_FRAME{ 0 };
 	HANDLE RTR_RECEIVE_EOT{ 0 };
-	HANDLE RTR_FILE_INPUT{ 0 };
+
+	HANDLE handles[EVENT_COUNTS] = {
+		IDLE_FILE_INPUT,	//0
+		IDLE_RECEIVE_ENQ,	//1
+		PREP_TX,			//2
+		TX_RECEIVE_ACK,		//3
+		TX_RECEIVE_REQ,		//4
+		RTR_FILE_INPUT,		//5
+		RTR_RECEIVE_FRAME,	//6
+		RTR_RECEIVE_EOT,	//7
+	};
+
 };
