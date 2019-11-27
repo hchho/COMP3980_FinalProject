@@ -99,7 +99,7 @@ public:
 	VOID initializeConnection(LPCWSTR portName);
 	VOID setCommConfig(LPCWSTR portName);
 	DWORD handleRead(LPVOID input);
-	void readControlCode();
+	void readHandle(DWORD bytesToReceive);
 	VOID drawBufferToWindow(const char* input, char delimiter);
 	void sendCommunicationMessage(DWORD event);
 	void setStateController(StateController* stateController) { this->stateController = stateController;};

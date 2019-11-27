@@ -215,20 +215,21 @@ DWORD CommController::handleRead(LPVOID input) {
 				//There is a lot of code reuse here we can narrow stuff down
 				switch (stateController->getState()) {
 				case TX:
-					// Expect a REQ or ACK synch bit will be handled in statecontroller
-					readControlCode();
+					// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
+					readHandle(CONTROL_CODE_LENGTH);
 					break;
 				case PREP_TX:
-					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only
-					readControlCode();
+					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
+					readHandle(CONTROL_CODE_LENGTH);
 					break;
 				case IDLE:
 					//Expect a ENQ and only an ENQ Control Code only
-					readControlCode();
+					readHandle(CONTROL_CODE_LENGTH);
 					break;
 				case RTR:
 					//Expect a data frame
 					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
+					readHandle(FRAME_LENGTH);
 					break;
 				}
 			}
@@ -239,11 +240,11 @@ DWORD CommController::handleRead(LPVOID input) {
 		
 	}
 }
-void CommController::readControlCode(){
+void CommController::readHandle(DWORD bytesToReceive){
 	// Control Codes are 2 chars
 	char inputBuffer[2];
 	DWORD lastError;
-	DWORD bytesToReceive, bytesReceived;
+	DWORD bytesReceived;
 	//Expect Control Code
 	bytesToReceive = 2;
 
@@ -275,6 +276,7 @@ void CommController::readControlCode(){
 		// Read file returns false if it fails or is returning asynchronously which is what er're going 
 		// Handle issues with actually failing to communitcate here
 	}
+	//Clear all characters unread in buffer on handle;
 	PurgeComm(commHandle, PURGE_RXCLEAR);
 }
 

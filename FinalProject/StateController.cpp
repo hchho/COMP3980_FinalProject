@@ -13,7 +13,7 @@ void StateController::parseDataFrame(char* frame)
 
 void StateController::drawBufferToWindow(const char* buff)
 {
-	/*drawStringBuffer(buff);*/
+	/*drawStringBufferh(buff);*/
 }
 
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
@@ -43,9 +43,27 @@ void StateController::handleWrite() {
 
 
 
-
+//QUESTION Reset events everytime we receive new input? What happens if we have multiple events that are signalled and haven't been reset? How wwould we run into those scenarios?
 void StateController::handleInput(char* input)
 {
+	switch (state) {
+	case TX:
+		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
+		
+		break;
+	case PREP_TX:
+		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
+		readHandle(CONTROL_CODE_LENGTH);
+		break;
+	case IDLE:
+		//Expect a ENQ and only an ENQ Control Code only
+		readHandle(CONTROL_CODE_LENGTH);
+		break;
+	case RTR:
+		//Expect a data frame
+		//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
+		readHandle(FRAME_LENGTH);
+		break;
 	//switch (state) {
 	//	/* Send States*/
 	//case PREP_TX:
