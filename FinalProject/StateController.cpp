@@ -17,27 +17,41 @@ void StateController::drawBufferToWindow(const char* buff)
 }
 
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
-void StateController::handleWrite() {
-	HANDLE dwEvent{ 0 };
+void StateController::handleProtocolWriteEvents() {
+	DWORD indexOfSignaledEvent;
 
 	while (comm->getIsComActive) {
-		//if (WaitCommEvent(sessionService->readThread, &dwEvent, 0)) {
-		//	// If current state is RTR and reading thread receives a frame, send ACK or REQ
-		//	// inside the comm message, we will check if the current system has something to send
-		//	if (state == STATES::RTR) {
-		//		comm->sendCommunicationMessage(sessionService->getEvents().receivedFrame);
-		//	}
-		//	else if (state == STATES::RTS) {
-		//		// condition for empty write buffer to send EOT
-		//		
-		//		// condition for frame acknowledged by an ACK
-		//		// condition for frame acknowledged by a REQ
-		//		// condition for the first initial send
-		//		
-		//	}
+		switch (state) {
+		case STATES::IDLE:
+			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
+			indexOfSignaledEvent = WaitForMultipleObjects(2, getEvents().handles, FALSE, INFINITE);
+			if (indexOfSignaledEvent == 0) {
+				state = STATES::PREP_TX;
+			}
+			else {
+				state = STATES::PREP_RX;
+			}
+			sendCommunicationMessage(indexOfSignaledEvent));
+		case STATES::RTR:
+		case STATES::RTS:
 
+		//if (WaitCommEvent(sessionService->readThread, &dwEvent, 0)) {
+		//// If current state is RTR and reading thread receives a frame, send ACK or REQ
+		//// inside the comm message, we will check if the current system has something to send
+		//if (state == STATES::RTR) {
+		//	comm->sendCommunicationMessage(sessionService->getEvents().receivedFrame);
 		//}
+		//else if (state == STATES::RTS) {
+		//	// condition for empty write buffer to send EOT
+		//	
+		//	// condition for frame acknowledged by an ACK
+		//	// condition for frame acknowledged by a REQ
+		//	// condition for the first initial send
+		//	
+		//}
+
 	}
+}
 }
 
 

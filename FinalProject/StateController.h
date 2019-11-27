@@ -16,6 +16,7 @@ private:
 	char* inputBuffer;
 	char** outputBuffer;
 	boolean output;
+	Events events;
 
 	SessionService* sessionService;
 	CommController* comm;
@@ -32,13 +33,12 @@ private:
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess), events(new Events()) {};
 
-	void handleWrite();
-	
-	//Public method called by commcontroller
+	void handleProtocolWriteEvents();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
+	Events getEvents() { return events; };
 
 	// Getters
 	STATES getState() { return state; };
