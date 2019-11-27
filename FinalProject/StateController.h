@@ -34,6 +34,9 @@ public:
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 
+	// Getters
+	STATES getState() { return state; };
+
 
 };
 #endif

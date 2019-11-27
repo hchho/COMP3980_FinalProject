@@ -5,7 +5,7 @@ void StateController::parseDataFrame(char* frame)
 	//CRC on frame using byte 1018-1022
 
 	//Read header
-	if (sync)
+	/*if (sync)*/
 		//Read Data
 
 
@@ -13,7 +13,7 @@ void StateController::parseDataFrame(char* frame)
 
 void StateController::drawBufferToWindow(const char* buff)
 {
-	drawStringBuffer(buff);
+	/*drawStringBuffer(buff);*/
 }
 
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
@@ -46,29 +46,29 @@ void StateController::handleWrite() {
 
 void StateController::handleInput(char* input)
 {
-	switch (state) {
-		/* Send States*/
-	case PREP_TX:
-		if (ErrorHandler::verifyControl(input, &ACK0))
-			//Start Send()				
-			break;
-	case TX:
-		if (ErrorHandler::verifyControl(input, &ACK0))
-			//sendNext();
+	//switch (state) {
+	//	/* Send States*/
+	//case PREP_TX:
+	//	if (ErrorHandler::verifyControl(input, &ACK0))
+	//		//Start Send()				
+	//		break;
+	//case TX:
+	//	if (ErrorHandler::verifyControl(input, &ACK0))
+	//		//sendNext();
 
-	/* Read States*/
-	case RTR:
-		if (!ErrorHandler::verifyC(input))
-			handleControlCode(input);
-		break;
+	///* Read States*/
+	//case RTR:
+	//	if (!ErrorHandler::verifyC(input))
+	//		handleControlCode(input);
+	//	break;
 
-		/* Idle State*/
-	case IDLE:
-		if (ErrorHandler::verifyCommand(input))
+	//	/* Idle State*/
+	//case IDLE:
+	//	if (ErrorHandler::verifyCommand(input))
 
-			break;
-	default:										// Default case means input has been received during a state that should not receive input	
-		break;
-	}
+	//		break;
+	//default:										// Default case means input has been received during a state that should not receive input	
+	//	break;
+	//}
 }
 

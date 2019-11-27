@@ -104,19 +104,24 @@
     <ClCompile Include="finalproject\CommController.cpp" />
     <ClCompile Include="finalproject\DisplayService.cpp" />
     <ClCompile Include="finalproject\SessionService.cpp" />
+    <ClCompile Include="FinalProject\StateController.cpp" />
     <ClCompile Include="finalproject\WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="finalproject\CommController.h" />
     <ClInclude Include="finalproject\CommService.h" />
+    <ClInclude Include="FinalProject\ControlCodes.h" />
     <ClInclude Include="finalproject\DisplayService.h" />
     <ClInclude Include="finalproject\ErrorHandler.h" />
     <ClInclude Include="finalproject\error_codes.h" />
+    <ClInclude Include="FinalProject\Events.h" />
     <ClInclude Include="finalproject\idm.h" />
     <ClInclude Include="finalproject\key_press.h" />
     <ClInclude Include="finalproject\modes.h" />
     <ClInclude Include="finalproject\Platform.h" />
     <ClInclude Include="finalproject\SessionService.h" />
+    <ClInclude Include="FinalProject\StateController.h" />
+    <ClInclude Include="FinalProject\States.h" />
     <ClInclude Include="finalproject\utils.h" />
     <ClInclude Include="finalproject\WINDOW.h" />
   </ItemGroup>

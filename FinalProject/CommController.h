@@ -9,6 +9,8 @@
 #include "error_codes.h"
 #include "ErrorHandler.h"
 #include "DisplayService.h"
+#include "StateController.h"
+#include "States.h"
 
 using namespace std;
 
@@ -70,6 +72,7 @@ private:
 	);
 
 	DisplayService* displayService;
+	StateController* stateController;
 	BOOL isComActive = false;
 	VOID drawSingleCharToWindow(char input);
 	VOID handleWrite(WPARAM* input);
@@ -96,8 +99,10 @@ public:
 	VOID initializeConnection(LPCWSTR portName);
 	VOID setCommConfig(LPCWSTR portName);
 	DWORD handleRead(LPVOID input);
+	void readControlCode();
 	VOID drawBufferToWindow(const char* input, char delimiter);
 	void sendCommunicationMessage(DWORD event);
+	void setStateController(StateController* stateController) { this->stateController = stateController;};
 
 	// Below are inline functions for this class
 

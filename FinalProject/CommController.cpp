@@ -194,51 +194,88 @@ VOID CommController::handleWrite(WPARAM* input) {
 ----------------------------------------------------------------------------------------------------------------------*/
 DWORD CommController::handleRead(LPVOID input) {
 	COMSTAT cs;
-	DWORD bytesReceived, endTime, lastError;
+	DWORD endTime;
 	DWORD dwEvent, dwError;
-	char inputBuffer[1];
-	OVERLAPPED overlapRead;
 
-	// Set overlap structure
-	overlapRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	overlapRead.Offset = 0;
-	overlapRead.OffsetHigh = 0;
-	
+
 	// Sets Comm Mask
 	if (!SetCommMask(commHandle, EV_RXCHAR)) {
 		MessageBox(NULL, (LPCWSTR)"SetCommMask failed.", (LPCWSTR)"Error", MB_OK);
 	}
+	// Read Loop
 	while (isComActive) {
+		// Wait for Comm Mask - set to wait for char
 		if (WaitCommEvent(commHandle, &dwEvent, 0)) {
+			// Clears comm error for readfile also sets cs cbinqueue with how many bytes received by commhandle
 			ClearCommError(commHandle, &dwError, &cs);
+
+			//Char event and there is something in queue
 			if ((dwEvent & EV_RXCHAR) && cs.cbInQue) {
-				if (!ReadFile(commHandle, inputBuffer, 1, &bytesReceived, &overlapRead)) {
-					bytesReceived = 0;
-					if ((lastError = GetLastError()) == ERROR_IO_PENDING &&
-						GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
-						bytesReceived) {
-						drawSingleCharToWindow(*inputBuffer);
-					}
-					else {
-						ClearCommError(commHandle, &lastError, &cs);
-						lastError = 0;
-					}
-				}
-				else {
-					if (cs.cbInQue) {
-						if (bytesReceived) {
-							drawSingleCharToWindow(*inputBuffer);
-						}
-					}
+				// Check state and read specific amount of characters
+				//There is a lot of code reuse here we can narrow stuff down
+				switch (stateController->getState()) {
+				case TX:
+					// Expect a REQ or ACK synch bit will be handled in statecontroller
+					readControlCode();
+					break;
+				case PREP_TX:
+					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only
+					readControlCode();
+					break;
+				case IDLE:
+					//Expect a ENQ and only an ENQ Control Code only
+					readControlCode();
+					break;
+				case RTR:
+					//Expect a data frame
+					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
+					break;
 				}
 			}
-			if (overlapRead.hEvent) {
-				ResetEvent(overlapRead.hEvent);
-			}
+
+			PurgeComm(commHandle, PURGE_RXCLEAR);
+			return 0;
+		}
+		
+	}
+}
+void CommController::readControlCode(){
+	// Control Codes are 2 chars
+	char inputBuffer[2];
+	DWORD lastError;
+	DWORD bytesToReceive, bytesReceived;
+	//Expect Control Code
+	bytesToReceive = 2;
+
+	// Set overlap structure
+	OVERLAPPED overlapRead;
+	overlapRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	overlapRead.Offset = 0;
+	overlapRead.OffsetHigh = 0;
+
+	// ReadFile
+	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
+	if (!ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
+		bytesReceived = 0;
+		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
+		if ((lastError = GetLastError()) == ERROR_IO_PENDING &&
+			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
+			bytesReceived == 2) {
+			stateController->handleInput(inputBuffer);
+		}
+		else {
+			// Acknowleding there is a error on comm port
+			// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
+			//
+			ClearCommError(commHandle, &lastError, NULL );
+			lastError = 0;
 		}
 	}
+	else {
+		// Read file returns false if it fails or is returning asynchronously which is what er're going 
+		// Handle issues with actually failing to communitcate here
+	}
 	PurgeComm(commHandle, PURGE_RXCLEAR);
-	return 0;
 }
 
 /*------------------------------------------------------------------------------------------------------------------
