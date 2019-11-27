@@ -6,10 +6,12 @@
 #include "CommController.h"
 #include "DisplayService.h"
 #include "SessionService.h"
+#include "ControlCodes.h"
 
 class StateController {
 private:
 	STATES state;
+	int synch;
 	int errorCount;
 	char* inputBuffer;
 	char** outputBuffer;
@@ -25,12 +27,16 @@ private:
 	void handleControlCode(char* code);
 	void setState(STATES state) { this->state = state; };
 
+	boolean verifyInput(char* input);
+
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
 	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess) {};
 
 	void handleWrite();
+	
+	//Public method called by commcontroller
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 
