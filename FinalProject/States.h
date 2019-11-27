@@ -17,9 +17,6 @@ enum STATES {
 	RX,			// Received Frame sending ack
 	SW_TX		// Has input to Buffer will switch to sending REQS as ACKS
 
-
-	
-
 };
 
 #endif /* STATES_H */

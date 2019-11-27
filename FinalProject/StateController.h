@@ -5,31 +5,34 @@
 #include "States.h"
 #include "CommController.h"
 #include "DisplayService.h"
+#include "SessionService.h"
 
 class StateController {
 private:
 	STATES state;
 	int errorCount;
-	char *inputBuffer;
-	char **outputBuffer;
+	char* inputBuffer;
+	char** outputBuffer;
 	boolean output;
 
-	CommController *comm;
-	DisplayService *serv;
+	SessionService* sessionService;
+	CommController* comm;
+	DisplayService* serv;
 
 	// Handles data frame when in data read state and 
-	void parseDataFrame(char *frame);
+	void parseDataFrame(char* frame);
 	// 
-	void handleControlCode(char *code);
+	void handleControlCode(char* code);
 	void setState(STATES state) { this->state = state; };
 
 public:
-	StateController() {};
-	StateController(CommController *comm, DisplayService *serv) : comm(comm), serv(serv) {};
 
+	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess) {};
+
+	void handleWrite();
 	void handleInput(char* input);
-	void drawBufferToWindow(const char *buff);
-
+	void drawBufferToWindow(const char* buff);
 
 
 };

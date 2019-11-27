@@ -316,3 +316,27 @@ VOID CommController::setCommConfig(LPCWSTR portName) {
 	SetCommState(commHandle, &commConfig.dcb);
 }
 
+
+
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	sendCommunicationMessage
+--
+-- DATE:		Nov 26, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu
+--
+-- INTERFACE:	
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write a control message to the port.
+----------------------------------------------------------------------------------------------------------------------*/
+void CommController::sendCommunicationMessage(DWORD event) {
+
+}
