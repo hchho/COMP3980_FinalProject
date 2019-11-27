@@ -32,6 +32,7 @@ public:
 	int checkSumCalculator(char* content, char* header);
 	bool checksumMatch(int checksum, char* header);
     int convertCharArrayToInteger(char* header);
+	int convertBinaryToDecimal(int n);
 	
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	handleErrorCode

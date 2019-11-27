@@ -105,11 +105,25 @@ int convertCharArrayToInteger(char* header) {
 
         string s(byteArray);
 
-		// Lexical cast in this case converts a binary string into it's corresponding integer value.
+		// Lexical cast in this case converts a binary string into it's identical integer counterpart.
         decToSum[i] = boost::lexical_cast<int>(s);
+		decToSum[i] = convertBinaryToDecimal(decToSum[i]);
 
     }
 
     int total = accumulate(begin(decToSum), end(decToSum), 0, plus<int>());
 
+}
+
+int convertBinaryToDecimal(int n)
+{
+	int decimalNumber = 0, i = 0, remainder;
+	while (n != 0)
+	{
+		remainder = n % 10;
+		n /= 10;
+		decimalNumber += remainder * pow(2, i);
+		++i;
+	}
+	return decimalNumber;
 }
