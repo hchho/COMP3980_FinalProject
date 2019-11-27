@@ -26,6 +26,13 @@
 -- to handle any error and use DisplayService to display to the user.
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
+
+
+public:
+
+	int checkSumCalculator(char* content, char* header)
+	bool checksumMatch(int checksum, char* header)
+	int hexadecimalToDecimal(char* hexVal)
 	
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	handleErrorCode
@@ -68,4 +75,5 @@ struct ErrorHandler {
 			break;
 		}
 	}
+
 };
