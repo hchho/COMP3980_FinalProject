@@ -27,12 +27,13 @@
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
 
-
 public:
 
-	int checkSumCalculator(char* content, char* header)
-	bool checksumMatch(int checksum, char* header)
-	int hexadecimalToDecimal(char* hexVal)
+	int checkSumCalculator(char* content, char* header);
+	bool checksumMatch(int checksum, char* header);
+	int hexadecimalToDecimal(char* hexVal);
+	int binaryToDecimal(char* binaryVal);
+    int convertCharArrayToInteger(char* header);
 	
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	handleErrorCode
