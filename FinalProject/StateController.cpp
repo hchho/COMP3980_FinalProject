@@ -31,7 +31,7 @@ void StateController::handleProtocolWriteEvents() {
 			else {
 				state = STATES::PREP_RX;
 			}
-			sendCommunicationMessage(indexOfSignaledEvent));
+			sendCommunicationMessage(indexOfSignaledEvent);
 		case STATES::RTR:
 		case STATES::RTS:
 
