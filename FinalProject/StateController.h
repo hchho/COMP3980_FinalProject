@@ -6,14 +6,17 @@
 #include "CommController.h"
 #include "DisplayService.h"
 #include "SessionService.h"
+#include <queue>
 
 class StateController {
 private:
 	STATES state;
 	int errorCount;
 	char* inputBuffer;
-	char** outputBuffer;
+	std::queue<char*> outputBuffer;
+	//char** outputBuffer;
 	boolean output;
+	boolean releaseTX;
 	Events events;
 
 	SessionService* sessionService;
@@ -35,6 +38,7 @@ public:
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 	Events getEvents() { return events; };
+	void sendCommunicationMessage(DWORD event);
 
 };
 #endif

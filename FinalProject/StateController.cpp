@@ -24,36 +24,101 @@ void StateController::handleProtocolWriteEvents() {
 		switch (state) {
 		case STATES::IDLE:
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
-			indexOfSignaledEvent = WaitForMultipleObjects(2, getEvents().handles, FALSE, INFINITE);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, INFINITE);
 			if (indexOfSignaledEvent == 0) {
-				state = STATES::PREP_TX;
+				setState(PREP_TX);
+				sendCommunicationMessage(indexOfSignaledEvent);
+				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
 			}
 			else {
-				state = STATES::PREP_RX;
+				setState(PREP_RX);
+				sendCommunicationMessage(indexOfSignaledEvent);
+				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				setState(RTS);
 			}
-			sendCommunicationMessage(indexOfSignaledEvent));
+			break;
 		case STATES::RTR:
+			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 3000);
+			if (indexOfSignaledEvent == 5) {
+				setState(RX);
+				sendCommunicationMessage(indexOfSignaledEvent);
+				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				setState(RTR);
+			}
+			else if (indexOfSignaledEvent == 6) {
+				setState(RX);
+				sendCommunicationMessage(indexOfSignaledEvent);
+				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				setState(RTR);
+			}
+			else {
+				sendCommunicationMessage(indexOfSignaledEvent);
+				setState(IDLE);
+			}
+			break;
 		case STATES::RTS:
+			// Set the event for an empty output buffer and set the state to idle after sending an EOT
+			if (outputBuffer.front() == nullptr) {
+				SetEvent(getEvents().handles[indexOfSignaledEvent]);
+				sendCommunicationMessage(indexOfSignaledEvent);
+				setState(IDLE);
+			}
+			else {
+				// Two possible handles to be signaled: TX_RECEIVE_ACK ,TX_RECEIVE_REQ
+				int resentCounter = 0;
+				while (resentCounter++ < 3) {
+					//sendFrame(outputBuffer.pop());
+					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
+					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
+						setState(TX);
+						break;
+					}
+				}
+				if (indexOfSignaledEvent == 3) {
+					setState(RTS);
+					continue;
+				}
+				else if (indexOfSignaledEvent == 4) {
+					setState(RTS);
+					releaseTX = !releaseTX;
+					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
+				}
+				if (resentCounter == 3 && indexOfSignaledEvent == WAIT_TIMEOUT) {
+					setState(IDLE);
+				}
 
-		//if (WaitCommEvent(sessionService->readThread, &dwEvent, 0)) {
-		//// If current state is RTR and reading thread receives a frame, send ACK or REQ
-		//// inside the comm message, we will check if the current system has something to send
-		//if (state == STATES::RTR) {
-		//	comm->sendCommunicationMessage(sessionService->getEvents().receivedFrame);
-		//}
-		//else if (state == STATES::RTS) {
-		//	// condition for empty write buffer to send EOT
-		//	
-		//	// condition for frame acknowledged by an ACK
-		//	// condition for frame acknowledged by a REQ
-		//	// condition for the first initial send
-		//	
-		//}
+			}
+		default:
+			break;
+		}
 
 	}
 }
-}
 
+
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	sendCommunicationMessage
+--
+-- DATE:		Nov 26, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu
+--
+-- INTERFACE:
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write a control message to the port.
+----------------------------------------------------------------------------------------------------------------------*/
+void StateController::sendCommunicationMessage(DWORD event) {
+
+}
 
 
 

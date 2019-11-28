@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
 
-constexpr static int EVENT_COUNTS = 8;
+constexpr static int EVENT_COUNTS = 9;
 
 struct Events {
 
@@ -13,6 +13,7 @@ struct Events {
 
 	HANDLE TX_RECEIVE_ACK{ 0 };
 	HANDLE TX_RECEIVE_REQ{ 0 };
+	HANDLE TX_EMPTY_OUTPUT{ 0 };
 
 	HANDLE RTR_FILE_INPUT{ 0 };
 	HANDLE RTR_RECEIVE_FRAME{ 0 };
@@ -27,6 +28,7 @@ struct Events {
 		RTR_FILE_INPUT,		//5
 		RTR_RECEIVE_FRAME,	//6
 		RTR_RECEIVE_EOT,	//7
+		TX_EMPTY_OUTPUT,	//8
 	};
 
 };
