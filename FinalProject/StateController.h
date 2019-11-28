@@ -28,7 +28,7 @@ private:
 	void handleControlCode(char* code);
 	void setState(STATES state) { this->state = state; };
 
-	boolean verifyInput(char* input);
+	int verifyInput(char* input);
 
 public:
 

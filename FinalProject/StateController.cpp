@@ -67,31 +67,33 @@ void StateController::handleInput(char* input)
 		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
 		// Method with logic to handle
 		// Verifies based on state  checks for synch bit as well
-		if(verifyInput(input))
+		//Received AC
+		if (verifyInput(input) == 1)
+			SetEvent(events.handles[3]);
+		if (verifyInput(input) == 2)
+			SetEvent(events.handles[4]);
 			//SetEvent()
-
-
 		break;
+
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACk either one will work
 		if (verifyInput(input))
-			//SetEvent()
+			SetEvent(events.handles[2]);
 		break;
+
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		if (verifyInput(input))
-			//SetEvent()
+			SetEvent(events.handles[1]);
 		break;
+
 	case RTR:
-		//Expect a data frame
-		//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
 
 		//Is it an EOT
-		if (verifyInput(input)){}			
-		// SetEvent()
-		// else it's a data frame
-		else {
+		if (verifyInput(input)){
+			SetEvent(events.handles[7]);
+		} else {
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
 		}
@@ -99,18 +101,18 @@ void StateController::handleInput(char* input)
 	}
 }
 
-boolean StateController::verifyInput(char* input) {
+int StateController::verifyInput(char* input) {
 		switch (state) {
 		case TX:
 			// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
 			// Method with logic to handle
 			// TODO: check to make sure this is standardized
+			// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
 
-			if (synch) 
-				return strcmp(input, &ACK1) || strcmp(input, &REQ1);
-			else 
-				return strcmp(input, &ACK0) || strcmp(input, &REQ0);
-			
+			if (synch)
+				return strcmp(input, &ACK1) ? 1 : strcmp(input, &REQ1) ? 2 : 0;
+			else
+				return strcmp(input, &ACK0) ? 1 : strcmp(input, &REQ0) ? 2 : 0;
 		case PREP_TX:
 			// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 			// Currently just expect an ACK either one will work
@@ -122,6 +124,6 @@ boolean StateController::verifyInput(char* input) {
 			//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
 			return strcmp(input, &EOT);
 		}
-		return true;
+		return 0;
 }
 
