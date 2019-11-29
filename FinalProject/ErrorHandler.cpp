@@ -1,9 +1,20 @@
 #include "ErrorHandler.h"
-#include "C:\Users\chira\Downloads\boost_1_71_0\boost\crc.hpp"
-#include "C:\Users\chira\Downloads\boost_1_71_0\boost\"
+
+//UNCOMMENT AFTER ADDING LIBRARY
+//#include "boost/crc.hpp"
 #include <string>
+#include <numeric>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
+
+int convertCharArrayToInteger(char* header);
+int convertBinaryToDecimal(int n);
+int hex_to_int(char hexArray[]);
+string int_to_hex(int my_integer);
+
+
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	checkSumCalculator
 --
@@ -24,15 +35,18 @@ using namespace std;
 -- NOTES:
 -- Call this function to calculate the checksum for a given dataword in char array format.
 ----------------------------------------------------------------------------------------------------------------------*/
-int checkSumCalculator(char * content) {
+int checkSumCalculator(char content[]) {
+
+	const string s(content);
 
 	// Standard idiom for calculating a CRC-32 checksum using the boost library
-    boost::crc_32_type crc_result;
-    crc_result.process_bytes(content, size_t contentlength);
-    int checksum = crc_result.checksum();
+
+	// UNCOMMENT AFTER ADDING LIBRARY
+    //boost::crc_32_type crc_result;
+    crc_result.process_bytes(s.data(), s.length());
+    const int checksum = crc_result.checksum();
 
 	return checksum;
-
 }
 
 /*------------------------------------------------------------------------------------------------------------------
@@ -55,75 +69,43 @@ int checkSumCalculator(char * content) {
 -- NOTES:
 -- Call this function when you want to evaluate if two checksums/check sequences are equivalent.
 ----------------------------------------------------------------------------------------------------------------------*/
-bool checksumMatch(int checksum, char * header) {
+bool checksumMatch(char header[], char data_word[]) {
 
-	int convertedHeader = convertCharArrayToInteger(header);
+	const int convertedHeader = hex_to_int(header);
+	const int convertedDataWord = checkSumCalculator(data_word);
 
-	if (convertedHeader == checksum) {
-		return true;
-	}
-	else {
-		return false;
-	}
-
+	return (convertedHeader == convertedDataWord);
 }
 
-/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	convertCharArrayToInteger
---
--- DATE:		Nov 27, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Chirag Fernandez
---
--- PROGRAMMER:	Chirag Fernandez
---
--- INTERFACE:	convertCharArrayToInteger(char* header)
---					char* header:	a pointer to a the position of the check sequence within the frame
---					
---
--- RETURNS:		int
---
--- NOTES:
--- Call this function to convert a binary number to decimal format.
-----------------------------------------------------------------------------------------------------------------------*/
-int convertCharArrayToInteger(char* header) {
-
-    int decToSum[4];
-
-    for (int i = 0; i < 4; i++) {
-
-        char byteArray[8];
-
-        for (int j = 0; j < 8; j++) {
-
-            byteArray[j] = *header;
-            header++;
-
-        }
-
-        string s(byteArray);
-
-		// Lexical cast in this case converts a binary string into it's identical integer counterpart.
-        decToSum[i] = boost::lexical_cast<int>(s);
-		decToSum[i] = convertBinaryToDecimal(decToSum[i]);
-
-    }
-
-    int total = accumulate(begin(decToSum), end(decToSum), 0, plus<int>());
-
-}
-
-int convertBinaryToDecimal(int n)
+string getHexCRC(int decCRC)
 {
-	int decimalNumber = 0, i = 0, remainder;
-	while (n != 0)
-	{
-		remainder = n % 10;
-		n /= 10;
-		decimalNumber += remainder * pow(2, i);
-		++i;
-	}
-	return decimalNumber;
+
+	return int_to_hex(decCRC);
+	
 }
+
+
+string int_to_hex(int my_integer)
+{
+	std::stringstream sstream;
+	sstream << std::hex << my_integer;
+	std::string result = sstream.str();
+
+	return result;
+}
+
+int hex_to_int(char hexArray[])
+{
+
+	string hexString(hexArray);
+
+	int x;
+	
+	std::stringstream ss;
+	ss << std::hex << hexArray;
+	ss >> x;
+
+	return x;
+	
+}
+

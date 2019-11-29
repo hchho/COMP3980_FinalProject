@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "error_codes.h"
 #include "DisplayService.h"
+#include <string>
 
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		ErrorHandler.h - A struct that handles error codes and displays an error message
@@ -27,12 +28,10 @@
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
 
-public:
-
-	int checkSumCalculator(char* content, char* header);
-	bool checksumMatch(int checksum, char* header);
-    int convertCharArrayToInteger(char* header);
-	int convertBinaryToDecimal(int n);
+	int checkSumCalculator(char content[]);
+	bool checksumMatch(char header[], char data_word[]);
+	std::string int_to_hex(int my_integer);
+	int hex_to_int(char hexArray[]);
 	
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	handleErrorCode
