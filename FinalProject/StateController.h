@@ -53,7 +53,6 @@ public:
 
 
 	void sendCommunicationMessage(DWORD event);
-	void sendFrame(HANDLE writeThreadHandle, char* frame);
 
 	void sendFrame(char* frame);
 };

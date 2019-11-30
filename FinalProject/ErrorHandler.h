@@ -76,19 +76,8 @@ struct ErrorHandler {
 	Can rework to passs in state and then use a switch to verify if strcmp is taking too long
 	or might be easier to just have this pass in 2 params to do input plus expected 
 	*/
-	static boolean verifyControl(char *input, const char *control) {
+	static boolean verifyControl(char* input, const char* control) {
 		return strcmp(input, control);
-		/*
-		return strcmp(input, &ENQ)
-			|| strcmp(input, &ACK0)
-			|| strcmp(input, &ACK1)
-			|| strcmp(input, &REQ0)
-			|| strcmp(input, &REQ1)
-			|| strcmp(input, &EOT);*/
-	}
-
-	static BOOL verifyControl(LPVOID a, const char* b) {
-		return false;
 	}
 
 	static BOOL verifyCommand(const char* input) {
