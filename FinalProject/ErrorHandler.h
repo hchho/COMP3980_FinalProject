@@ -28,8 +28,8 @@
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
 
-	int checkSumCalculator(char content[]);
-	bool checksumMatch(char header[], char data_word[]);
+	int checkSumCalculator(char * content);
+	bool checksumMatch(char * content);
 	std::string int_to_hex(int my_integer);
 	int hex_to_int(char hexArray[]);
 	

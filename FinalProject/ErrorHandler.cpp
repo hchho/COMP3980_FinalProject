@@ -1,7 +1,7 @@
 #include "ErrorHandler.h"
 
 //UNCOMMENT AFTER ADDING LIBRARY
-//#include "boost/crc.hpp"
+#include "boost/crc.hpp"
 #include <string>
 #include <numeric>
 #include <iomanip>
@@ -35,14 +35,17 @@ string int_to_hex(int my_integer);
 -- NOTES:
 -- Call this function to calculate the checksum for a given dataword in char array format.
 ----------------------------------------------------------------------------------------------------------------------*/
-int checkSumCalculator(char content[]) {
+int checkSumCalculator(char * content) {
 
-	const string s(content);
+	char contentHeader[4];
+	copy(content + 1019, content + 2023, contentHeader);
+
+	const string s(contentHeader);
 
 	// Standard idiom for calculating a CRC-32 checksum using the boost library
 
 	// UNCOMMENT AFTER ADDING LIBRARY
-    //boost::crc_32_type crc_result;
+    boost::crc_32_type crc_result;
     crc_result.process_bytes(s.data(), s.length());
     const int checksum = crc_result.checksum();
 
@@ -69,7 +72,13 @@ int checkSumCalculator(char content[]) {
 -- NOTES:
 -- Call this function when you want to evaluate if two checksums/check sequences are equivalent.
 ----------------------------------------------------------------------------------------------------------------------*/
-bool checksumMatch(char header[], char data_word[]) {
+bool checksumMatch(char * content) {
+
+	char header[4];
+	char data_word[1017];
+
+	copy(content + 2, content + 1019, data_word);
+	copy(content + 1019, content + 2023, header);
 
 	const int convertedHeader = hex_to_int(header);
 	const int convertedDataWord = checkSumCalculator(data_word);
