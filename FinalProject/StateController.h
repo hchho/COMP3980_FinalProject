@@ -51,7 +51,7 @@ public:
 
 
 	void sendCommunicationMessage(DWORD event);
-	void sendFrame(char* frame);
+	void sendFrame(HANDLE writeThreadHandle, char* frame);
 
 };
 #endif

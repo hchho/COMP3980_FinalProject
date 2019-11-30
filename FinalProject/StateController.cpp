@@ -69,9 +69,10 @@ void StateController::handleProtocolWriteEvents() {
 			else {
 				// Two possible handles to be signaled: TX_RECEIVE_ACK ,TX_RECEIVE_REQ
 				int errorCounter = 0;
+				int resentCounter = 0;
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					sendFrame(sess->writeThread, outputBuffer.front());
+					//sendFrame(sess->writeThread, outputBuffer.front());
 					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
@@ -88,7 +89,7 @@ void StateController::handleProtocolWriteEvents() {
 					releaseTX = !releaseTX;
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
-				if (resentCounter == 3 && indexOfSignaledEvent == WAIT_TIMEOUT) {
+				if (resentCounter++ == 3 && indexOfSignaledEvent == WAIT_TIMEOUT) {
 					setState(IDLE);
 				}
 			}
@@ -121,7 +122,7 @@ void StateController::handleProtocolWriteEvents() {
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
 void StateController::sendFrame(HANDLE writeThreadHandle, char* frame) {
-	comm::writeDataToPort(writeThreadHandle, frame);
+	comm->writeDataToPort(writeThreadHandle, frame);
 }
 
 /*------------------------------------------------------------------------------------------------------------------
