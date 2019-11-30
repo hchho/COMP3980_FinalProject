@@ -52,8 +52,6 @@ public:
 	STATES getState() { return state; };
 
 
-	void sendCommunicationMessage(DWORD event);
-
 	void sendFrame(char* frame);
 };
 #endif

@@ -165,22 +165,30 @@ void StateController::handleInput(char* input)
 	}
 }
 
+
 int StateController::verifyInput(char* input) {
-		switch (state) {
-		case TX:
-			// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
-			// Method with logic to handle
-			// TODO: check to make sure this is standardized
-			// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
-
-		/* Idle State*/
+	switch (state) {
+	case TX:
+		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
+		// Method with logic to handle
+		// TODO: check to make sure this is standardized
+		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
+		if (synch)
+			return strcmp(input, &ACK1) ? 1 : strcmp(input, &REQ1) ? 2 : 0;
+		else
+			return strcmp(input, &ACK0) ? 1 : strcmp(input, &REQ0) ? 2 : 0;
+	case PREP_TX:
+		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
+		// Currently just expect an ACK either one will work
+		return strcmp(input, &ACK0) || strcmp(input, &ACK1);
 	case IDLE:
-		if (ErrorHandler::verifyCommand(input)) {}
-
-			break;
-	default:										// Default case means input has been received during a state that should not receive input	
-		break;
+		//Expect a ENQ and only an ENQ Control Code only
+		return strcmp(input, &ENQ);
+	case RTR:
+		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
+		return strcmp(input, &EOT);
 	}
+	return 0;
 }
 
 /*------------------------------------------------------------------------------------------------------------------

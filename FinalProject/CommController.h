@@ -104,7 +104,7 @@ public:
 	void sendCommunicationMessage(DWORD event);
 	void setStateController(StateController* stateController) { this->stateController = stateController;};
 
-	VOID writeDataToPort(HANDLE writeThreadHandle, char* frame);
+	VOID writeDataToPort(const char* frame);
 
 	// Below are inline functions for this class
 
