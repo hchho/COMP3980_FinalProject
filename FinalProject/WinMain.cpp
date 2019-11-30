@@ -114,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspsqCmdParam
 	sessionService = SessionService{ &commController, &displayService };
 	StateController stateController = StateController(&commController, &displayService, &sessionService);
 
-	commController.setStateController(&commController);
+	commController.setStateController(&stateController);
 
 	while (GetMessage(&Msg, NULL, 0, 0))
 	{

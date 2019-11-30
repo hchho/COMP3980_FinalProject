@@ -9,11 +9,11 @@
 #include "error_codes.h"
 #include "ErrorHandler.h"
 #include "DisplayService.h"
-#include "StateController.h"
 #include "States.h"
 
 using namespace std;
 
+class StateController;
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		CommController.h -	A controller class that controls all operations in the physical
 --												layer in the OSI architecture.

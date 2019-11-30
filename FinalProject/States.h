@@ -19,7 +19,5 @@ enum STATES {
 
 };
 
-constexpr DWORD CONTROL_CODE_LENGTH = 2;
-constexpr DWORD FRAME_LENGTH = 1024;
 
 #endif /* STATES_H */

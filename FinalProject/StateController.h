@@ -3,11 +3,12 @@
 #define STATE_CONTROLLER_H
 
 #include "States.h"
-#include "CommController.h"
 #include "DisplayService.h"
-#include "SessionService.h"
 #include "ControlCodes.h"
+#include "Events.h"
 
+class CommController;
+class SessionService;
 class StateController {
 private:
 	STATES state;
@@ -33,12 +34,14 @@ private:
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess), events(new Events()) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess), events(Events()) {};
 
 	void handleProtocolWriteEvents();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 	Events getEvents() { return events; };
+	
+	void sendCommunicationMessage(DWORD event);
 
 	// Getters
 	STATES getState() { return state; };

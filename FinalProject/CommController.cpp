@@ -7,6 +7,7 @@
 #include <iostream>
 #include "ErrorHandler.h"
 #include "CommController.h"
+#include "StateController.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		CommController.cpp -	A controller class that controls all operations in the physical
@@ -216,20 +217,20 @@ DWORD CommController::handleRead(LPVOID input) {
 				switch (stateController->getState()) {
 				case TX:
 					// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
-					readHandle(CONTROL_CODE_LENGTH);
+					readHandle(2);
 					break;
 				case PREP_TX:
 					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-					readHandle(CONTROL_CODE_LENGTH);
+					readHandle(2);
 					break;
 				case IDLE:
 					//Expect a ENQ and only an ENQ Control Code only
-					readHandle(CONTROL_CODE_LENGTH);
+					readHandle(2);
 					break;
 				case RTR:
 					//Expect a data frame
 					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
-					readHandle(FRAME_LENGTH);
+					readHandle(1024);
 					break;
 				}
 			}

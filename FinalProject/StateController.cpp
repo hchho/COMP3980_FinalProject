@@ -1,5 +1,7 @@
 #include "StateController.h"
 #include "ControlCodes.h"
+#include "CommController.h"
+#include "SessionService.h"
 void StateController::parseDataFrame(char* frame)
 {
 	//CRC on frame using byte 1018-1022
@@ -20,7 +22,7 @@ void StateController::drawBufferToWindow(const char* buff)
 void StateController::handleProtocolWriteEvents() {
 	DWORD indexOfSignaledEvent;
 
-	while (comm->getIsComActive) {
+	while (comm->getIsComActive()) {
 		switch (state) {
 		case STATES::IDLE:
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
@@ -35,23 +37,23 @@ void StateController::handleProtocolWriteEvents() {
 		case STATES::RTR:
 		case STATES::RTS:
 
-		//if (WaitCommEvent(sessionService->readThread, &dwEvent, 0)) {
-		//// If current state is RTR and reading thread receives a frame, send ACK or REQ
-		//// inside the comm message, we will check if the current system has something to send
-		//if (state == STATES::RTR) {
-		//	comm->sendCommunicationMessage(sessionService->getEvents().receivedFrame);
-		//}
-		//else if (state == STATES::RTS) {
-		//	// condition for empty write buffer to send EOT
-		//	
-		//	// condition for frame acknowledged by an ACK
-		//	// condition for frame acknowledged by a REQ
-		//	// condition for the first initial send
-		//	
-		//}
+			//if (WaitCommEvent(sessionService->readThread, &dwEvent, 0)) {
+			//// If current state is RTR and reading thread receives a frame, send ACK or REQ
+			//// inside the comm message, we will check if the current system has something to send
+			//if (state == STATES::RTR) {
+			//	comm->sendCommunicationMessage(sessionService->getEvents().receivedFrame);
+			//}
+			//else if (state == STATES::RTS) {
+			//	// condition for empty write buffer to send EOT
+			//	
+			//	// condition for frame acknowledged by an ACK
+			//	// condition for frame acknowledged by a REQ
+			//	// condition for the first initial send
+			//	
+			//}
 
+		}
 	}
-}
 }
 
 
