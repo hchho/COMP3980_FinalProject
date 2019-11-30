@@ -37,8 +37,8 @@ string int_to_hex(int my_integer);
 ----------------------------------------------------------------------------------------------------------------------*/
 int checkSumCalculator(char * content) {
 
-	char contentHeader[4];
-	copy(content + 1019, content + 2023, contentHeader);
+	char contentHeader[1017];
+	copy(content + 2, content + 1019, contentHeader);
 
 	const string s(contentHeader);
 
@@ -89,7 +89,28 @@ bool checksumMatch(char * content) {
 string getHexCRC(int decCRC)
 {
 
-	return int_to_hex(decCRC);
+	char crcArr[4];
+
+	std::stringstream stream;
+	stream << std::hex << decCRC;
+	std::string result(stream.str());
+
+	string hexArr[4] = { result.substr(0, 2), result.substr(2, 2),
+		result.substr(4, 2), result.substr(6, 2) };
+
+	for (int i = 0; i < std::strlen(crcArr); i++)
+	{
+
+		stringstream currHex;
+		
+		currHex << hex << hexArr[i];
+		int tempInt;
+		currHex >> tempInt;
+		crcArr[i] = tempInt;
+		
+	}
+	
+	return crcArr;
 	
 }
 
