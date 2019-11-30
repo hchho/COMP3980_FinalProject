@@ -122,6 +122,14 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
+VOID CommController::writeDataToPort(HANDLE writeThreadHandle, char* frame)
+{
+	OVERLAPPED overlapped;
+	if (!WriteFile(writeThreadHandle, frame, 1024, NULL, &overlapped)) {
+		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
+	}
+}
+
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	drawInput
 --
@@ -354,29 +362,4 @@ VOID CommController::setCommConfig(LPCWSTR portName) {
 		return;
 	}
 	SetCommState(commHandle, &commConfig.dcb);
-}
-
-
-
-
-/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendCommunicationMessage
---
--- DATE:		Nov 26, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Michael Yu
---
--- PROGRAMMER:	Michael Yu
---
--- INTERFACE:	
---
--- RETURNS:		void
---
--- NOTES:
--- Call this function to write a control message to the port.
-----------------------------------------------------------------------------------------------------------------------*/
-void CommController::sendCommunicationMessage(DWORD event) {
-
 }

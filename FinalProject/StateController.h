@@ -6,6 +6,9 @@
 #include "DisplayService.h"
 #include "ControlCodes.h"
 #include "Events.h"
+#include "Events.h"
+#include <queue>
+#include "SessionService.h"
 
 class CommController;
 class SessionService;
@@ -17,9 +20,15 @@ private:
 	char* inputBuffer;
 	char** outputBuffer;
 	boolean output;
+	int errorCount = 0;
+	char* inputBuffer{ 0 };
+	std::queue<char*> outputBuffer;
+	//char** outputBuffer;
+	boolean output = false;;
+	boolean releaseTX = false;
 	Events events;
 
-	SessionService* sessionService;
+	SessionService* sess;
 	CommController* comm;
 	DisplayService* serv;
 
@@ -46,6 +55,9 @@ public:
 	// Getters
 	STATES getState() { return state; };
 
+
+	void sendCommunicationMessage(DWORD event);
+	void sendFrame(char* frame);
 
 };
 #endif
