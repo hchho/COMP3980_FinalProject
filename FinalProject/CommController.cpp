@@ -121,10 +121,10 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
-VOID CommController::writeDataToPort(HANDLE writeThreadHandle, char* frame)
+VOID CommController::writeDataToPort(const char* frame)
 {
 	OVERLAPPED overlapped;
-	if (!WriteFile(writeThreadHandle, frame, 1024, NULL, &overlapped)) {
+	if (!WriteFile(commHandle, frame, 1024, NULL, &overlapped)) {
 		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
 	}
 }

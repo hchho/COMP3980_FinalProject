@@ -68,4 +68,12 @@ struct ErrorHandler {
 			break;
 		}
 	}
+
+	static BOOL verifyControl(LPVOID a, const char* b) {
+		return false;
+	}
+
+	static BOOL verifyCommand(const char* input) {
+		return false;
+	}
 };

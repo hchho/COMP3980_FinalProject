@@ -16,6 +16,7 @@ class StateController {
 private:
 	STATES state;
 	int errorCount = 0;
+	int resentCounter = 0;
 	char* inputBuffer{ 0 };
 	std::queue<char*> outputBuffer;
 	//char** outputBuffer;
@@ -32,7 +33,7 @@ private:
 	// 
 	void handleControlCode(char* code);
 	void setState(STATES state) { this->state = state; };
-
+	void sendCommunicationMessage(DWORD event);
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
@@ -42,8 +43,6 @@ public:
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 	Events getEvents() { return events; };
-	void sendCommunicationMessage(DWORD event);
 	void sendFrame(char* frame);
-
 };
 #endif
