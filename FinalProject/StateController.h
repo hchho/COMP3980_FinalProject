@@ -32,13 +32,14 @@ private:
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess), events(new Events()) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess) {};
 
 	void handleProtocolWriteEvents();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 	Events getEvents() { return events; };
 	void sendCommunicationMessage(DWORD event);
+	void sendFrame(char* frame);
 
 };
 #endif

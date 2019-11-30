@@ -66,14 +66,16 @@ void StateController::handleProtocolWriteEvents() {
 			}
 			else {
 				// Two possible handles to be signaled: TX_RECEIVE_ACK ,TX_RECEIVE_REQ
-				int resentCounter = 0;
-				while (resentCounter++ < 3) {
-					//sendFrame(outputBuffer.pop());
+				int errorCounter = 0;
+				while (errorCounter++ < 3) {
+					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
+					sendFrame(outputBuffer.front());
+					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
-						setState(TX);
 						break;
 					}
+					setState(RTS); // following protocol, need to set back to RTS
 				}
 				if (indexOfSignaledEvent == 3) {
 					setState(RTS);
@@ -87,7 +89,6 @@ void StateController::handleProtocolWriteEvents() {
 				if (resentCounter == 3 && indexOfSignaledEvent == WAIT_TIMEOUT) {
 					setState(IDLE);
 				}
-
 			}
 		default:
 			break;
@@ -97,6 +98,29 @@ void StateController::handleProtocolWriteEvents() {
 }
 
 
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	sendFrame
+--
+-- DATE:		Nov 26, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu
+--
+-- INTERFACE:
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write the next frame in the output buffer to the serial port. This function
+-- calls the CommController to perform the writing to the file (port).
+----------------------------------------------------------------------------------------------------------------------*/
+void StateController::sendFrame(char* frame) {
+	comm::writeDataToPort(frame);
+}
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	sendCommunicationMessage
@@ -114,7 +138,8 @@ void StateController::handleProtocolWriteEvents() {
 -- RETURNS:		void
 --
 -- NOTES:
--- Call this function to write a control message to the port.
+-- Call this function to write a control message to the port.  This function
+-- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
 void StateController::sendCommunicationMessage(DWORD event) {
 

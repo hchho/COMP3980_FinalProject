@@ -121,6 +121,12 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
+VOID CommController::writeDataToPort(char* frame)
+{
+	
+	return VOID();
+}
+
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	drawInput
 --
