@@ -98,7 +98,7 @@ public:
 	DWORD handleRead(LPVOID input);
 	VOID drawBufferToWindow(const char* input, char delimiter);
 
-	VOID writeDataToPort(char* frame);
+	VOID writeDataToPort(HANDLE writeThreadHandle, char* frame);
 
 	// Below are inline functions for this class
 

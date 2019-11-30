@@ -52,6 +52,12 @@ public:
 		currentMode = COMMAND_MODE;
 	};
 	VOID handleProcess(UINT Message, WPARAM wParam);
+
+	// NEED TO INITIALIZE THESE TWO THREADS SOMEWHERE
+
 	HANDLE writeThread;
+	//writeThread = CreateThread(NULL, 0, handleWrite, nullptr, 0, &writeThreadId);
 	HANDLE readThread;
+	//writeThread = CreateThread(NULL, 0, handleInput, input, 0, &readThreadId);
+
 };

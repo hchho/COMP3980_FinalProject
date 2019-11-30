@@ -69,7 +69,7 @@ void StateController::handleProtocolWriteEvents() {
 				int errorCounter = 0;
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					sendFrame(outputBuffer.front());
+					sendFrame(sess->writeThread, outputBuffer.front());
 					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
@@ -118,8 +118,8 @@ void StateController::handleProtocolWriteEvents() {
 -- Call this function to write the next frame in the output buffer to the serial port. This function
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendFrame(char* frame) {
-	comm::writeDataToPort(frame);
+void StateController::sendFrame(HANDLE writeThreadHandle, char* frame) {
+	comm::writeDataToPort(writeThreadHandle, frame);
 }
 
 /*------------------------------------------------------------------------------------------------------------------
