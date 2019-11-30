@@ -7,7 +7,7 @@ void StateController::parseDataFrame(char* frame)
 	//CRC on frame using byte 1018-1022
 
 	//Read header
-	/*if (sync)*/
+	//if (sync)
 		//Read Data
 
 
@@ -15,7 +15,7 @@ void StateController::parseDataFrame(char* frame)
 
 void StateController::drawBufferToWindow(const char* buff)
 {
-	/*drawStringBufferh(buff);*/
+	serv->drawStringBuffer(buff);
 }
 
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
@@ -72,7 +72,7 @@ void StateController::handleProtocolWriteEvents() {
 				int resentCounter = 0;
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					//sendFrame(sess->writeThread, outputBuffer.front());
+					sendFrame(outputBuffer.front());
 					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
@@ -100,8 +100,6 @@ void StateController::handleProtocolWriteEvents() {
 	}
 }
 
-
-
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	sendFrame
 --
@@ -121,37 +119,10 @@ void StateController::handleProtocolWriteEvents() {
 -- Call this function to write the next frame in the output buffer to the serial port. This function
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendFrame(HANDLE writeThreadHandle, char* frame) {
-	comm->writeDataToPort(writeThreadHandle, frame);
+void StateController::sendFrame(char* frame) {
+	comm->writeDataToPort(frame);
 }
 
-/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendCommunicationMessage
---
--- DATE:		Nov 26, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Michael Yu
---
--- PROGRAMMER:	Michael Yu
---
--- INTERFACE:
---
--- RETURNS:		void
---
--- NOTES:
--- Call this function to write a control message to the port.  This function
--- calls the CommController to perform the writing to the file (port).
-----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendCommunicationMessage(DWORD event) {
-
-}
-
-
-
-// QUESTION Reset events everytime we receive new input? What happens if we have multiple events that are signalled and haven't been reset? 
-// How would we run into those scenarios?
 void StateController::handleInput(char* input)
 {
 	// Depending on state figure out what to expect and if correct ack then signal event
@@ -202,21 +173,71 @@ int StateController::verifyInput(char* input) {
 			// TODO: check to make sure this is standardized
 			// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
 
-			if (synch)
-				return strcmp(input, &ACK1) ? 1 : strcmp(input, &REQ1) ? 2 : 0;
-			else
-				return strcmp(input, &ACK0) ? 1 : strcmp(input, &REQ0) ? 2 : 0;
-		case PREP_TX:
-			// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-			// Currently just expect an ACK either one will work
-			return strcmp(input, &ACK0) || strcmp(input, &ACK1);
-		case IDLE:
-			//Expect a ENQ and only an ENQ Control Code only
-			return strcmp(input, &ENQ);
-		case RTR:
-			//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
-			return strcmp(input, &EOT);
-		}
-		return 0;
+		/* Idle State*/
+	case IDLE:
+		if (ErrorHandler::verifyCommand(input)) {}
+
+			break;
+	default:										// Default case means input has been received during a state that should not receive input	
+		break;
+	}
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	sendCommunicationMessage
+--
+-- DATE:		Nov 26, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Henry Ho
+--
+-- INTERFACE:
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write a control message to the port. 
+----------------------------------------------------------------------------------------------------------------------*/
+void StateController::sendCommunicationMessage(DWORD event) {
+	switch (event) {
+	case 0: //IDLE_FILE_INPUT
+	case 5: //RTR_FILE_INPUT
+		if (state == IDLE) {
+			comm->writeDataToPort(&ENQ);
+			setState(PREP_TX);
+		}
+		else if (state == RX) {
+			comm->writeDataToPort(&REQ0);
+		}
+		break;
+	case 1: //IDLE_RECEIVE_ENQ
+		if (outputBuffer.size() == 0) { //output buffer is empty
+			comm->writeDataToPort(&ACK0); // This should either be ACK0 or ACK1
+		}
+		break;
+	case 6: //RTR_RECEIVE_FRAME
+		//Perform CRC Validation on received data
+		if (true) { // frame is valid
+			comm->writeDataToPort(&ACK0); // This should either be ACK0 or ACK1
+		}
+		else {
+			inputBuffer = { 0 }; // Clear input buffer. Discard frame
+		}
+		break;
+	case 9: //RTS_DONE_SENDING 
+		if (state == RTS) {
+			comm->writeDataToPort(&EOT);
+			setState(IDLE);
+		}
+		break;
+	default:
+		return;
+	}
+}
+
+void StateController::handleControlCode(char* code) {
+
+}

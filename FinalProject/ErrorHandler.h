@@ -86,4 +86,12 @@ struct ErrorHandler {
 			|| strcmp(input, &REQ1)
 			|| strcmp(input, &EOT);*/
 	}
+
+	static BOOL verifyControl(LPVOID a, const char* b) {
+		return false;
+	}
+
+	static BOOL verifyCommand(const char* input) {
+		return false;
+	}
 };

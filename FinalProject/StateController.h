@@ -17,6 +17,7 @@ private:
 	STATES state;
 	int synch;
 	int errorCount = 0;
+	int resentCounter = 0;
 	char* inputBuffer{ 0 };
 	std::queue<char*> outputBuffer;
 	//char** outputBuffer;
@@ -36,6 +37,7 @@ private:
 
 	int verifyInput(char* input);
 
+	void sendCommunicationMessage(DWORD event);
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
@@ -53,5 +55,6 @@ public:
 	void sendCommunicationMessage(DWORD event);
 	void sendFrame(HANDLE writeThreadHandle, char* frame);
 
+	void sendFrame(char* frame);
 };
 #endif
