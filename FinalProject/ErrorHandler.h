@@ -64,6 +64,8 @@ struct ErrorHandler {
 			break;
 		case ERROR_RD_THREAD:
 			DisplayService::displayMessageBox("Error creating read thread");
+		case ERROR_OPEN_FILE:
+			DisplayService::displayMessageBox("Error opening file");
 		default:
 			DisplayService::displayMessageBox("Unknown error detected.");
 			break;

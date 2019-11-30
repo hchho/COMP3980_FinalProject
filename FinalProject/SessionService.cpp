@@ -1,3 +1,4 @@
+#include <iostream>
 #include <stdlib.h>
 #include <windows.h>
 #include "error_codes.h"
@@ -167,6 +168,9 @@ VOID SessionService::handleConnectMode(UINT Message, WPARAM wParam) {
 			currentMode = COMMAND_MODE;
 			dispService->setMenuItemState(true);
 			break;
+		case IDM_Upload:
+			createThread(SessionService::readFunc, this);
+			break;
 		case IDM_HELP:
 			DisplayService::displayMessageBox("Press <ESC> to disconnect.");
 			break;
@@ -221,4 +225,58 @@ VOID SessionService::handleProcess(UINT Message, WPARAM wParam) {
 	default:
 		break;
 	}
+}
+
+DWORD SessionService::readFile(LPVOID input) {
+	HANDLE hFile;
+	DWORD dwBytesRead;
+	CONST UINT MAX_PATH_SIZE = 128;
+	CONST UINT MAX_FILE_SIZE = 64000000; // 64 MB file size
+	wchar_t filename[MAX_PATH_SIZE];
+	OPENFILENAME ofn;
+
+	RtlZeroMemory(&filename, sizeof(filename));
+	ZeroMemory(&ofn, sizeof(ofn));
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL;  // If you have a window to center over, put its HANDLE here
+	ofn.lpstrFilter = TEXT("Text Files\0*.txt\0Any File\0*.*\0");
+	ofn.lpstrFile = filename;
+	ofn.nMaxFile = MAX_FILE_SIZE;
+	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST;
+
+	if (!GetOpenFileName(&ofn)) {
+		ErrorHandler::handleError(ERROR_OPEN_FILE);
+		return 0;
+	}
+
+	hFile = CreateFile(
+		filename, 
+		GENERIC_READ, 
+		0, 
+		NULL, 
+		OPEN_EXISTING, 
+		FILE_ATTRIBUTE_NORMAL, 
+		NULL
+	);
+
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		ErrorHandler::handleError(ERROR_OPEN_FILE);
+		return 0;
+	}
+
+	char ReadBuffer[1017] = { 0 }; // The buffer size should be defined somewhere
+
+	//It should equal the buffer size - 1 to give room for null character
+	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
+		if (dwBytesRead == 0) {
+			break;
+		}
+		std::cout << ReadBuffer << std::endl;
+		std::cout << dwBytesRead << std::endl;
+	}
+
+	CloseHandle(hFile);
+	return 0;
 }
