@@ -5,21 +5,25 @@
 #include "States.h"
 #include "CommController.h"
 #include "DisplayService.h"
-#include "SessionService.h"
+#include "Events.h"
 #include <queue>
+#include "SessionService.h"
+
+// Avoid circular dependency
+class SessionService;
 
 class StateController {
 private:
 	STATES state;
-	int errorCount;
-	char* inputBuffer;
+	int errorCount = 0;
+	char* inputBuffer{ 0 };
 	std::queue<char*> outputBuffer;
 	//char** outputBuffer;
-	boolean output;
-	boolean releaseTX;
+	boolean output = false;;
+	boolean releaseTX = false;
 	Events events;
 
-	SessionService* sessionService;
+	SessionService* sess;
 	CommController* comm;
 	DisplayService* serv;
 
@@ -31,8 +35,8 @@ private:
 
 public:
 
-	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess) {};
+	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess) {};
 
 	void handleProtocolWriteEvents();
 	void handleInput(char* input);
