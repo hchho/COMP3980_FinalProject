@@ -31,4 +31,5 @@ struct Events {
 		TX_EMPTY_OUTPUT,	//8
 	};
 
+	Events() {};
 };
