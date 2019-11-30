@@ -16,10 +16,6 @@ class StateController {
 private:
 	STATES state;
 	int synch;
-	int errorCount;
-	char* inputBuffer;
-	char** outputBuffer;
-	boolean output;
 	int errorCount = 0;
 	char* inputBuffer{ 0 };
 	std::queue<char*> outputBuffer;
@@ -42,15 +38,13 @@ private:
 
 public:
 
-	StateController() : comm(nullptr), serv(nullptr), sessionService(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sessionService(sess), events(Events()) {};
+	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess), events(Events()) {};
 
 	void handleProtocolWriteEvents();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 	Events getEvents() { return events; };
-	
-	void sendCommunicationMessage(DWORD event);
 
 	// Getters
 	STATES getState() { return state; };
