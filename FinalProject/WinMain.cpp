@@ -12,6 +12,7 @@
 #include "CommController.h"
 #include "SessionService.h"
 #include "WINDOW.h"
+#include "StateController.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		WinMain.cpp - A file that contains the program's main method and event processing method.
@@ -109,12 +110,15 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspsqCmdParam
 	ShowWindow(hwnd, nCmdShow);
 	UpdateWindow(hwnd);
 
+	StateController* stateController;
+
 	DisplayService displayService = DisplayService{ &hwnd };
 	CommController commController = CommController{ &displayService };
-	sessionService = SessionService{ &commController, &displayService };
-	StateController stateController = StateController(&commController, &displayService, &sessionService);
+	sessionService = SessionService{ &commController, &displayService};
+	stateController = new StateController(&commController, &displayService, &sessionService);
 
-	commController.setStateController(&stateController);
+	commController.setStateController(stateController);
+	sessionService.setStateController(stateController);
 
 	while (GetMessage(&Msg, NULL, 0, 0))
 	{
@@ -122,6 +126,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspsqCmdParam
 		DispatchMessage(&Msg);
 	}
 	return Msg.wParam;
+
+	delete stateController;
 }
 
 /*------------------------------------------------------------------------------------------------------------------

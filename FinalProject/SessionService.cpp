@@ -8,6 +8,8 @@
 #include "SessionService.h"
 #include "CommService.h"
 #include "idm.h"
+#include "DisplayService.h"
+#include "StateController.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		SessionService.cpp -A class that handles all session level events according to the OSI network
@@ -117,6 +119,7 @@ VOID SessionService::handleCommandMode(UINT Message, WPARAM wParam) {
 		case IDM_Connect_COM1:
 			commController->initializeConnection(TEXT("COM1"));
 			createThread(CommService::readFunc, commController);
+			createThread(CommService::protocolFunc, stateController);
 			currentMode = CONNECT_MODE;
 			dispService->setMenuItemState(currentMode);
 			break;
@@ -275,6 +278,9 @@ DWORD SessionService::readFile(LPVOID input) {
 		}
 		std::cout << ReadBuffer << std::endl;
 		std::cout << dwBytesRead << std::endl;
+		
+		// Setting event to File Input 
+		SetEvent(stateController->getEvents()->handles[0]);
 	}
 
 	CloseHandle(hFile);

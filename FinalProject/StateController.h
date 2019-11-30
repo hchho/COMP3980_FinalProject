@@ -6,7 +6,6 @@
 #include "DisplayService.h"
 #include "ControlCodes.h"
 #include "Events.h"
-#include "Events.h"
 #include <queue>
 #include "SessionService.h"
 
@@ -23,7 +22,7 @@ private:
 	//char** outputBuffer;
 	boolean output = false;;
 	boolean releaseTX = false;
-	Events events;
+	Events* events;
 
 	SessionService* sess;
 	CommController* comm;
@@ -41,12 +40,14 @@ private:
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess), events(Events()) {};
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess), events(new Events()) {
+		state = IDLE;
+	};
 
-	void handleProtocolWriteEvents();
+	DWORD handleProtocolWriteEvents();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
-	Events getEvents() { return events; };
+	Events* getEvents() { return events; };
 
 	// Getters
 	STATES getState() { return state; };

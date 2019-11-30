@@ -19,39 +19,38 @@ void StateController::drawBufferToWindow(const char* buff)
 }
 
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
-void StateController::handleProtocolWriteEvents() {
+DWORD StateController::handleProtocolWriteEvents() {
 	DWORD indexOfSignaledEvent;
 
 	while (comm->getIsComActive()) {
 		switch (state) {
 		case STATES::IDLE:
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, INFINITE);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 			if (indexOfSignaledEvent == 0) {
-				setState(PREP_TX);
 				sendCommunicationMessage(indexOfSignaledEvent);
-				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 			}
 			else {
 				setState(PREP_RX);
 				sendCommunicationMessage(indexOfSignaledEvent);
-				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTS);
 			}
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 3000);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 3000);
 			if (indexOfSignaledEvent == 5) {
 				setState(RX);
 				sendCommunicationMessage(indexOfSignaledEvent);
-				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else if (indexOfSignaledEvent == 6) {
 				setState(RX);
 				sendCommunicationMessage(indexOfSignaledEvent);
-				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else {
@@ -62,7 +61,7 @@ void StateController::handleProtocolWriteEvents() {
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.front() == nullptr) {
-				SetEvent(getEvents().handles[indexOfSignaledEvent]);
+				SetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				sendCommunicationMessage(indexOfSignaledEvent);
 				setState(IDLE);
 			}
@@ -74,7 +73,7 @@ void StateController::handleProtocolWriteEvents() {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrame(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
+					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
 						break;
 					}
@@ -98,6 +97,7 @@ void StateController::handleProtocolWriteEvents() {
 		}
 
 	}
+	return 0;
 }
 
 /*------------------------------------------------------------------------------------------------------------------
@@ -133,9 +133,9 @@ void StateController::handleInput(char* input)
 		// Verifies based on state  checks for synch bit as well
 		//Received AC
 		if (verifyInput(input) == 1)
-			SetEvent(events.handles[3]);
+			SetEvent(events->handles[3]);
 		if (verifyInput(input) == 2)
-			SetEvent(events.handles[4]);
+			SetEvent(events->handles[4]);
 			//SetEvent()
 		break;
 
@@ -143,20 +143,20 @@ void StateController::handleInput(char* input)
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACk either one will work
 		if (verifyInput(input))
-			SetEvent(events.handles[2]);
+			SetEvent(events->handles[2]);
 		break;
 
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		if (verifyInput(input))
-			SetEvent(events.handles[1]);
+			SetEvent(events->handles[1]);
 		break;
 
 	case RTR:
 
 		//Is it an EOT
 		if (verifyInput(input)){
-			SetEvent(events.handles[7]);
+			SetEvent(events->handles[7]);
 		} else {
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
@@ -212,6 +212,10 @@ int StateController::verifyInput(char* input) {
 void StateController::sendCommunicationMessage(DWORD event) {
 	switch (event) {
 	case 0: //IDLE_FILE_INPUT
+		if (state == IDLE) {
+			comm->writeDataToPort(&ENQ);
+			setState(PREP_TX);
+		}
 	case 5: //RTR_FILE_INPUT
 		if (state == IDLE) {
 			comm->writeDataToPort(&ENQ);
