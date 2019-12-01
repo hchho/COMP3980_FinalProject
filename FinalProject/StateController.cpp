@@ -35,12 +35,14 @@ DWORD StateController::handleProtocolWriteEvents() {
 				setState(PREP_RX);
 				sendCommunicationMessage(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				setState(RTS);
+				setState(RTR);
 			}
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
+			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 5) {
 				setState(RX);
 				sendCommunicationMessage(indexOfSignaledEvent);
@@ -224,6 +226,7 @@ void StateController::sendCommunicationMessage(DWORD event) {
 			setState(PREP_TX);
 		}
 	case 5: //RTR_FILE_INPUT
+			// This is when we have a file to send Shouldn't be sending anyhting only changing our Reqs to ACKS
 		if (state == IDLE) {
 			comm->writeDataToPort(&ENQ);
 			setState(PREP_TX);
