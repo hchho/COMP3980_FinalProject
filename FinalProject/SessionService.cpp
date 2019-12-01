@@ -189,7 +189,7 @@ VOID SessionService::handleConnectMode(UINT Message, WPARAM wParam) {
 			dispService->setMenuItemState(true);
 			break;
 		default:
-			commController->handleParam(&wParam);
+		//	commController->handleParam(&wParam);
 			break;
 		}
 	}
