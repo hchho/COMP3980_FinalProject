@@ -18,7 +18,6 @@ private:
 	int errorCount = 0;
 	int resentCounter = 0;
 	char* inputBuffer{ 0 };
-	std::queue<char*> outputBuffer;
 	//char** outputBuffer;
 	boolean output = false;;
 	boolean releaseTX = false;
@@ -43,6 +42,8 @@ public:
 	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess), events(new Events()) {
 		state = IDLE;
 	};
+	std::queue<char*> outputBuffer;
+
 
 	DWORD handleProtocolWriteEvents();
 	void handleInput(char* input);

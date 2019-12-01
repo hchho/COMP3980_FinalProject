@@ -60,6 +60,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			break;
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
+			// Getting null pointer since deque is empty not sure how to fill this
 			if (outputBuffer.front() == nullptr) {
 				SetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				sendCommunicationMessage(indexOfSignaledEvent);
@@ -167,6 +168,7 @@ void StateController::handleInput(char* input)
 		} else {
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
+			// Output Pop array also remember to delete pointers as they are dynamically allocated
 		}
 		break;
 	}

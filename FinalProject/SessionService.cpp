@@ -273,15 +273,20 @@ DWORD SessionService::readFile(LPVOID input) {
 
 	//It should equal the buffer size - 1 to give room for null character
 	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
-		if (dwBytesRead == 0) {
+		if (dwBytesRead == 0)
 			break;
-		}
-		std::cout << ReadBuffer << std::endl;
-		std::cout << dwBytesRead << std::endl;
+		// output buffer is a pointer to char *  if they all point to the same buffer can't really send anything will have to instantiate a new buffer each time 
+		
+		char *newBuffer = new char[1017];
+		strcpy(newBuffer, ReadBuffer);
+		stateController->outputBuffer.emplace(newBuffer);
+		
 		
 		// Setting event to File Input 
+		// do we need to repeatedly set this over and over?
 		SetEvent(stateController->getEvents()->handles[0]);
 	}
+	ResetEvent(stateController->getEvents()->handles[0]);
 
 	CloseHandle(hFile);
 	return 0;

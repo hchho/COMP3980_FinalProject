@@ -125,7 +125,8 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 VOID CommController::writeDataToPort(const char* frame)
 {
 	OVERLAPPED overlapped;
-	if (WriteFile(commHandle, frame, 2, NULL, &OVERLAPPED())) {
+	DWORD fLen = strlen(frame);
+	if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
 		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
 	}
 }
@@ -246,8 +247,8 @@ DWORD CommController::handleRead(LPVOID input) {
 			PurgeComm(commHandle, PURGE_RXCLEAR);
 			return 0;
 		}
-		
 	}
+	return 0;
 }
 void CommController::readHandle(DWORD bytesToReceive){
 	// Control Codes are 2 chars
