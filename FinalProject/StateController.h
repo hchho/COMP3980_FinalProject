@@ -2,16 +2,19 @@
 #ifndef STATE_CONTROLLER_H
 #define STATE_CONTROLLER_H
 
+
 #include "States.h"
 #include "DisplayService.h"
 #include "ControlCodes.h"
 #include "Events.h"
-#include "Events.h"
-#include <queue>
 #include "SessionService.h"
+#include "StateControllerHelper.h"
+#include <queue>
+#include <string>
 
 class CommController;
 class SessionService;
+
 class StateController {
 private:
 	STATES state;
@@ -19,8 +22,7 @@ private:
 	int errorCount = 0;
 	int resentCounter = 0;
 	char* inputBuffer{ 0 };
-	std::queue<char*> outputBuffer;
-	//char** outputBuffer;
+	std::queue<std::string> outputBuffer;
 	boolean output = false;;
 	boolean releaseTX = false;
 	Events events;
@@ -28,6 +30,7 @@ private:
 	SessionService* sess;
 	CommController* comm;
 	DisplayService* serv;
+	StateControllerHelper* sHelper;
 
 	// Handles data frame when in data read state and 
 	void parseDataFrame(char* frame);
@@ -36,8 +39,9 @@ private:
 	void setState(STATES state) { this->state = state; };
 
 	int verifyInput(char* input);
-
 	void sendCommunicationMessage(DWORD event);
+	void sendFrame(std::string data);
+
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
@@ -51,7 +55,5 @@ public:
 	// Getters
 	STATES getState() { return state; };
 
-
-	void sendFrame(char* frame);
 };
 #endif

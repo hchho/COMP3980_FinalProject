@@ -1,7 +1,7 @@
 #include "ErrorHandler.h"
 
 //UNCOMMENT AFTER ADDING LIBRARY
-#include "boost/crc.hpp"
+//#include "boost/crc.hpp"
 #include <string>
 #include <numeric>
 #include <iomanip>
@@ -35,21 +35,22 @@ string int_to_hex(int my_integer);
 -- NOTES:
 -- Call this function to calculate the checksum for a given dataword in char array format.
 ----------------------------------------------------------------------------------------------------------------------*/
-int checkSumCalculator(char * content) {
+int checkSumCalculator(char* content) {
 
 	char contentHeader[1017];
 	copy(content + 2, content + 1019, contentHeader);
 
-	const string s(contentHeader);
+	const string s{ contentHeader };
 
 	// Standard idiom for calculating a CRC-32 checksum using the boost library
 
 	// UNCOMMENT AFTER ADDING LIBRARY
-    boost::crc_32_type crc_result;
-    crc_result.process_bytes(s.data(), s.length());
-    const int checksum = crc_result.checksum();
+	//boost::crc_32_type crc_result;
+	//crc_result.process_bytes(s.data(), s.length());
+	//const int checksum = crc_result.checksum();
 
-	return checksum;
+	//return checksum;
+	return 0;
 }
 
 /*------------------------------------------------------------------------------------------------------------------
@@ -72,7 +73,7 @@ int checkSumCalculator(char * content) {
 -- NOTES:
 -- Call this function when you want to evaluate if two checksums/check sequences are equivalent.
 ----------------------------------------------------------------------------------------------------------------------*/
-bool checksumMatch(char * content) {
+bool checksumMatch(char* content) {
 
 	char header[4];
 	char data_word[1017];
@@ -102,16 +103,16 @@ string getHexCRC(int decCRC)
 	{
 
 		stringstream currHex;
-		
+
 		currHex << hex << hexArr[i];
 		int tempInt;
 		currHex >> tempInt;
 		crcArr[i] = tempInt;
-		
+
 	}
-	
+
 	return crcArr;
-	
+
 }
 
 
@@ -130,12 +131,12 @@ int hex_to_int(char hexArray[])
 	string hexString(hexArray);
 
 	int x;
-	
+
 	std::stringstream ss;
 	ss << std::hex << hexArray;
 	ss >> x;
 
 	return x;
-	
+
 }
 

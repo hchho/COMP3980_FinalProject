@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{58A58A55-4F6E-4AAD-8FA6-8223664A2F41}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -100,11 +100,18 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="finalproject\CommController.cpp" />
     <ClCompile Include="finalproject\DisplayService.cpp" />
+    <ClCompile Include="FinalProject\ErrorHandler.cpp" />
     <ClCompile Include="finalproject\SessionService.cpp" />
     <ClCompile Include="FinalProject\StateController.cpp" />
+    <ClCompile Include="FinalProject\StateControllerHelper.cpp" />
     <ClCompile Include="finalproject\WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -121,12 +128,16 @@
     <ClInclude Include="finalproject\Platform.h" />
     <ClInclude Include="finalproject\SessionService.h" />
     <ClInclude Include="FinalProject\StateController.h" />
+    <ClInclude Include="FinalProject\StateControllerHelper.h" />
     <ClInclude Include="FinalProject\States.h" />
     <ClInclude Include="finalproject\utils.h" />
     <ClInclude Include="finalproject\WINDOW.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="finalproject\WinMenu.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FinalProject\WinMenu.aps" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
