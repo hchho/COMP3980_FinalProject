@@ -31,12 +31,12 @@ void StateController::handleProtocolWriteEvents() {
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, INFINITE);
 			if (indexOfSignaledEvent == 0) {
 				setState(PREP_TX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
 			}
 			else {
 				setState(PREP_RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
 				setState(RTS);
 			}
@@ -46,18 +46,18 @@ void StateController::handleProtocolWriteEvents() {
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 3000);
 			if (indexOfSignaledEvent == 5) {
 				setState(RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else if (indexOfSignaledEvent == 6) {
 				setState(RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents().handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else {
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
 			break;
@@ -65,7 +65,7 @@ void StateController::handleProtocolWriteEvents() {
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.empty()) {
 				SetEvent(getEvents().handles[indexOfSignaledEvent]);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
 			else {
@@ -74,7 +74,7 @@ void StateController::handleProtocolWriteEvents() {
 				int resentCounter = 0;
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					sendFrame(outputBuffer.front());
+					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents().handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
@@ -103,7 +103,7 @@ void StateController::handleProtocolWriteEvents() {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendFrame
+-- FUNCTION:	sendFrameToCommController
 --
 -- DATE:		Nov 26, 2019
 --
@@ -122,7 +122,7 @@ void StateController::handleProtocolWriteEvents() {
 -- to package the frame, given only the pointer to the data stored in the output buffer. This function
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendFrame(std::string data) {
+void StateController::sendFrameToCommController(std::string data) {
 	std::string frame = sHelper->buildFrame(data);
 	comm->writeFrameToPort(frame);
 }
@@ -197,7 +197,7 @@ int StateController::verifyInput(char* input) {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendCommunicationMessage
+-- FUNCTION:	sendCommunicationMessageToCommController
 --
 -- DATE:		Nov 26, 2019
 --
@@ -214,7 +214,7 @@ int StateController::verifyInput(char* input) {
 -- NOTES:
 -- Call this function to write a control message to the port.
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendCommunicationMessage(DWORD event) {
+void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	switch (event) {
 	case 0: //IDLE_FILE_INPUT
 	case 5: //RTR_FILE_INPUT

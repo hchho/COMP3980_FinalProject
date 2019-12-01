@@ -39,8 +39,8 @@ private:
 	void setState(STATES state) { this->state = state; };
 
 	int verifyInput(char* input);
-	void sendCommunicationMessage(DWORD event);
-	void sendFrame(std::string data);
+	void sendCommunicationMessageToCommController(DWORD event);
+	void sendFrameToCommController(std::string data);
 
 public:
 
