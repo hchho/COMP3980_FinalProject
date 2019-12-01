@@ -239,15 +239,15 @@ DWORD CommController::handleRead(LPVOID input) {
 				case RTR:
 					//Expect a data frame
 					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
-					readHandle(1024);
+					readHandle(1016);
 					break;
 				}
 			}
 
 			PurgeComm(commHandle, PURGE_RXCLEAR);
-			return 0;
 		}
 	}
+
 	return 0;
 }
 void CommController::readHandle(DWORD bytesToReceive){
@@ -256,7 +256,6 @@ void CommController::readHandle(DWORD bytesToReceive){
 	DWORD lastError;
 	DWORD bytesReceived;
 	//Expect Control Code
-	bytesToReceive = 2;
 
 	// Set overlap structure
 	OVERLAPPED overlapRead;
@@ -268,9 +267,11 @@ void CommController::readHandle(DWORD bytesToReceive){
 	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
 	if (ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
 		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
+		ClearCommError(this->commHandle, &lastError, NULL);
+		int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
 		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
 			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
-			bytesReceived == 2) {
+			bytesReceived == bytesToReceive) {
 			stateController->handleInput(inputBuffer);
 		}
 		else {
