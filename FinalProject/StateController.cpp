@@ -40,7 +40,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 3000);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 			if (indexOfSignaledEvent == 5) {
 				setState(RX);
 				sendCommunicationMessage(indexOfSignaledEvent);
@@ -73,7 +73,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrame(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
+					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
 						break;
 					}
