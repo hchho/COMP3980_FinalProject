@@ -4,6 +4,7 @@
 #include "error_codes.h"
 #include "DisplayService.h"
 #include "ControlCodes.h"
+#include <string>
 
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		ErrorHandler.h - A struct that handles error codes and displays an error message
@@ -23,11 +24,16 @@
 -- PROGRAMMER:		Henry Ho
 --
 -- NOTES:
--- This is a public struct and should be able to be invoked anywhere in the application. The purpose is 
+-- This is a public struct and should be able to be invoked anywhere in the application. The purpose is
 -- to handle any error and use DisplayService to display to the user.
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
-	
+
+	int checkSumCalculator(char* content);
+	bool checksumMatch(char* content);
+	std::string int_to_hex(int my_integer);
+	int hex_to_int(char hexArray[]);
+
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	handleErrorCode
 	--
@@ -74,7 +80,7 @@ struct ErrorHandler {
 	/*
 	Verifies Commands code
 	Can rework to passs in state and then use a switch to verify if strcmp is taking too long
-	or might be easier to just have this pass in 2 params to do input plus expected 
+	or might be easier to just have this pass in 2 params to do input plus expected
 	*/
 	static boolean verifyControl(char* input, const char* control) {
 		return strcmp(input, control);
@@ -83,4 +89,5 @@ struct ErrorHandler {
 	static BOOL verifyCommand(const char* input) {
 		return false;
 	}
+
 };
