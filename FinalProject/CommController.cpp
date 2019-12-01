@@ -124,10 +124,8 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 
 VOID CommController::writeDataToPort(const char* frame)
 {
-	char str = 0005;
-	//OVERLAPPED overlapped;
-	int err = strlen(frame);
-	if (err = WriteFile(commHandle, frame, 2, NULL, &OVERLAPPED())) {
+	OVERLAPPED overlapped;
+	if (WriteFile(commHandle, frame, 2, NULL, &OVERLAPPED())) {
 		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
 	}
 }
@@ -268,7 +266,6 @@ void CommController::readHandle(DWORD bytesToReceive){
 	// ReadFile
 	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
 	if (ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
-		bytesReceived = 0;
 		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
 		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
 			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
