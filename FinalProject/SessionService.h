@@ -2,9 +2,11 @@
 
 #include <windows.h>
 #include "modes.h"
-#include "CommController.h"
 #include "DisplayService.h"
+#include "StateController.h"
+#include "Events.h"
 
+class CommController;
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		SessionService.h -	A class that handles all session level events according to the OSI network
 --										architecture.
@@ -41,7 +43,7 @@ class SessionService {
 private:
 	CommController* commController;
 	DisplayService* dispService;
-	INT currentMode;
+	int currentMode;
 	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
 	VOID handleConnectMode(UINT Message, WPARAM wParam);
@@ -55,4 +57,12 @@ public:
 		currentMode = COMMAND_MODE;
 	};
 	VOID handleProcess(UINT Message, WPARAM wParam);
+
+	// NEED TO INITIALIZE THESE TWO THREADS SOMEWHERE
+
+	HANDLE writeThread;
+	//writeThread = CreateThread(NULL, 0, handleWrite, nullptr, 0, &writeThreadId);
+	HANDLE readThread;
+	//writeThread = CreateThread(NULL, 0, handleInput, input, 0, &readThreadId);
+
 };

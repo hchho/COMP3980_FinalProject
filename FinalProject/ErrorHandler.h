@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "error_codes.h"
 #include "DisplayService.h"
+#include "ControlCodes.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		ErrorHandler.h - A struct that handles error codes and displays an error message
@@ -69,5 +70,17 @@ struct ErrorHandler {
 			DisplayService::displayMessageBox("Unknown error detected.");
 			break;
 		}
+	}
+	/*
+	Verifies Commands code
+	Can rework to passs in state and then use a switch to verify if strcmp is taking too long
+	or might be easier to just have this pass in 2 params to do input plus expected 
+	*/
+	static boolean verifyControl(char* input, const char* control) {
+		return strcmp(input, control);
+	}
+
+	static BOOL verifyCommand(const char* input) {
+		return false;
 	}
 };

@@ -112,6 +112,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hprevInstance, LPSTR lspsqCmdParam
 	DisplayService displayService = DisplayService{ &hwnd };
 	CommController commController = CommController{ &displayService };
 	sessionService = SessionService{ &commController, &displayService };
+	StateController stateController = StateController(&commController, &displayService, &sessionService);
+
+	commController.setStateController(&stateController);
 
 	while (GetMessage(&Msg, NULL, 0, 0))
 	{

@@ -9,9 +9,11 @@
 #include "error_codes.h"
 #include "ErrorHandler.h"
 #include "DisplayService.h"
+#include "States.h"
 
 using namespace std;
 
+class StateController;
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		CommController.h -	A controller class that controls all operations in the physical
 --												layer in the OSI architecture.
@@ -70,6 +72,7 @@ private:
 	);
 
 	DisplayService* displayService;
+	StateController* stateController;
 	BOOL isComActive = false;
 	VOID drawSingleCharToWindow(char input);
 	VOID handleWrite(WPARAM* input);
@@ -96,7 +99,12 @@ public:
 	VOID initializeConnection(LPCWSTR portName);
 	VOID setCommConfig(LPCWSTR portName);
 	DWORD handleRead(LPVOID input);
+	void readHandle(DWORD bytesToReceive);
 	VOID drawBufferToWindow(const char* input, char delimiter);
+	void sendCommunicationMessage(DWORD event);
+	void setStateController(StateController* stateController) { this->stateController = stateController;};
+
+	VOID writeDataToPort(const char* frame);
 
 	// Below are inline functions for this class
 
