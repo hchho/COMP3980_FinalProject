@@ -186,9 +186,9 @@ int StateController::verifyInput(char* input) {
 		// TODO: check to make sure this is standardized
 		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
 		if (synch)
-			return strncmp(input, &ACK1, 2) ? 1 : strcmp(input, &REQ1) ? 2 : 0;
+			return strncmp(input, &ACK1, 2) ? 1 : strncmp(input, &REQ1, 2) ? 2 : 0;
 		else
-			return strncmp(input, &ACK0, 2) ? 1 : strcmp(input, &REQ0) ? 2 : 0;
+			return strncmp(input, &ACK0, 2) ? 1 : strncmp(input, &REQ0, 2) ? 2 : 0;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
