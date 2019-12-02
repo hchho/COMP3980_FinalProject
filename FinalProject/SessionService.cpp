@@ -8,6 +8,8 @@
 #include "SessionService.h"
 #include "CommService.h"
 #include "idm.h"
+#include "DisplayService.h"
+#include "StateController.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		SessionService.cpp -A class that handles all session level events according to the OSI network
@@ -117,6 +119,7 @@ VOID SessionService::handleCommandMode(UINT Message, WPARAM wParam) {
 		case IDM_Connect_COM1:
 			commController->initializeConnection(TEXT("COM1"));
 			createThread(CommService::readFunc, commController);
+			createThread(CommService::protocolFunc, stateController);
 			currentMode = CONNECT_MODE;
 			dispService->setMenuItemState(currentMode);
 			break;
@@ -186,7 +189,7 @@ VOID SessionService::handleConnectMode(UINT Message, WPARAM wParam) {
 			dispService->setMenuItemState(true);
 			break;
 		default:
-			commController->handleParam(&wParam);
+			//commController->handleParam(&wParam);
 			break;
 		}
 	}
@@ -273,9 +276,18 @@ DWORD SessionService::readFile(LPVOID input) {
 		if (dwBytesRead == 0) {
 			break;
 		}
-		std::cout << ReadBuffer << std::endl;
-		std::cout << dwBytesRead << std::endl;
+		// output buffer is a pointer to char *  if they all point to the same buffer can't really send anything will have to instantiate a new buffer each time 
+		
+		char *newBuffer = new char[1017];
+		strcpy(newBuffer, ReadBuffer);
+		stateController->outputBuffer.emplace(newBuffer);
+		
+		
+		// Setting event to File Input 
+		// do we need to repeatedly set this over and over?
+		SetEvent(stateController->getEvents()->handles[0]);
 	}
+	ResetEvent(stateController->getEvents()->handles[0]);
 
 	CloseHandle(hFile);
 	return 0;
