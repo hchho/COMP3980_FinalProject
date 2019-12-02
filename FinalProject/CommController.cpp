@@ -220,39 +220,42 @@ DWORD CommController::handleRead(LPVOID input) {
 			ClearCommError(commHandle, &dwError, &cs);
 
 			//Char event and there is something in queue
-			if ((dwEvent & EV_RXCHAR) && cs.cbInQue) {
+			if ((dwEvent && EV_RXCHAR) && cs.cbInQue) {
 				// Check state and read specific amount of characters
 				//There is a lot of code reuse here we can narrow stuff down
 				switch (stateController->getState()) {
 				case TX:
 					// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
-					readHandle(2);
+					readHandle(3);
 					break;
 				case PREP_TX:
 					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-					readHandle(2);
+					readHandle(3);
 					break;
 				case IDLE:
 					//Expect a ENQ and only an ENQ Control Code only
-					readHandle(2);
+					readHandle(3);
 					break;
 				case RTR:
 					//Expect a data frame
 					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
-					readHandle(1016);
+					readHandle(1017);
 					break;
 				}
 			}
 
-			PurgeComm(commHandle, PURGE_RXCLEAR);
+			PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 		}
 	}
 
 	return 0;
 }
-void CommController::readHandle(DWORD bytesToReceive){
+
+void CommController::readHandle(DWORD bytesToReceive) {
 	// Control Codes are 2 chars
-	char inputBuffer[2];
+	char controlBuffer[3];
+	char frameBuffer[1017];
+	DWORD CONTROL_SIZE = 3;
 	DWORD lastError;
 	DWORD bytesReceived;
 	//Expect Control Code
@@ -263,31 +266,40 @@ void CommController::readHandle(DWORD bytesToReceive){
 	overlapRead.Offset = 0;
 	overlapRead.OffsetHigh = 0;
 
+	char* inputBuffer = bytesToReceive > CONTROL_SIZE ? frameBuffer : controlBuffer;
+	int isOk = 0;
+
+
 	// ReadFile
 	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
-	if (ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
-		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
-		ClearCommError(this->commHandle, &lastError, NULL);
-		int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
-			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
-			bytesReceived == bytesToReceive) {
-			stateController->handleInput(inputBuffer);
+		if (ReadFile(commHandle, inputBuffer, bytesToReceive-1, &bytesReceived, &overlapRead)) {
+			//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
+			ClearCommError(this->commHandle, &lastError, NULL);
+			int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+			if ((lastError = GetLastError()) == ERROR_SUCCESS &&
+				GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
+				bytesReceived == bytesToReceive) {
+				stateController->handleInput(inputBuffer);
+			}
+			else {
+				// Acknowleding there is a error on comm port
+				// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
+				//
+				ClearCommError(commHandle, &lastError, NULL);
+				lastError = 0;
+			}
 		}
 		else {
-			// Acknowleding there is a error on comm port
-			// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
-			//
-			ClearCommError(commHandle, &lastError, NULL );
-			lastError = 0;
+			// Read file returns false if it fails or is returning asynchronously which is what er're going 
+			// Handle issues with actually failing to communitcate here
+			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+				if (bytesReceived != 0) {
+					stateController->handleInput(inputBuffer);
+				}
 		}
-	}
-	else {
-		// Read file returns false if it fails or is returning asynchronously which is what er're going 
-		// Handle issues with actually failing to communitcate here
-	}
+	CloseHandle(overlapRead.hEvent);
 	//Clear all characters unread in buffer on handle;
-	PurgeComm(commHandle, PURGE_RXCLEAR);
+	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
 /*------------------------------------------------------------------------------------------------------------------
@@ -324,6 +336,7 @@ VOID CommController::initializeConnection(LPCWSTR portName) {
 		ErrorHandler::handleError(ERROR_PORT_PROP);
 		return;
 	};
+
 
 	SetCommState(commHandle, &commConfig.dcb);
 

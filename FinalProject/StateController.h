@@ -7,6 +7,7 @@
 #include "ControlCodes.h"
 #include "Events.h"
 #include <queue>
+#include <string>
 #include "SessionService.h"
 
 class CommController;
