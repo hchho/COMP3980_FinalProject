@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include "CommController.h"
+#include "StateController.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		CommService.cpp -	A service class that handles threading functions in the application in
@@ -49,6 +50,10 @@ struct CommService {
 	----------------------------------------------------------------------------------------------------------------------*/
 	static DWORD WINAPI readFunc(LPVOID param) {
 		return ((CommController*)param)->handleRead(0);
+	};
+
+	static DWORD WINAPI protocolFunc(LPVOID param) {
+		return ((StateController*)param)->handleProtocolWriteEvents();
 	};
 
 };

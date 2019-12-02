@@ -3,10 +3,10 @@
 #include <windows.h>
 #include "modes.h"
 #include "DisplayService.h"
-#include "StateController.h"
 #include "Events.h"
 
 class CommController;
+class StateController;
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		SessionService.h -	A class that handles all session level events according to the OSI network
 --										architecture.
@@ -43,6 +43,7 @@ class SessionService {
 private:
 	CommController* commController;
 	DisplayService* dispService;
+	StateController* stateController;
 	int currentMode;
 	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
@@ -53,11 +54,12 @@ public:
 		return ((SessionService*)param)->readFile(0);
 	}
 	SessionService() {};
-	SessionService(CommController* controller, DisplayService* dispService) : commController(controller), dispService(dispService) {
+	SessionService(CommController* controller, DisplayService* dispService) : commController(controller), dispService(dispService){
 		currentMode = COMMAND_MODE;
 	};
 	VOID handleProcess(UINT Message, WPARAM wParam);
 
+	VOID setStateController(StateController* stateController) { this->stateController = stateController; };
 	// NEED TO INITIALIZE THESE TWO THREADS SOMEWHERE
 
 	HANDLE writeThread;
