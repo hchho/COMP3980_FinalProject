@@ -273,8 +273,9 @@ DWORD SessionService::readFile(LPVOID input) {
 
 	//It should equal the buffer size - 1 to give room for null character
 	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
-		if (dwBytesRead == 0)
+		if (dwBytesRead == 0) {
 			break;
+		}
 		// output buffer is a pointer to char *  if they all point to the same buffer can't really send anything will have to instantiate a new buffer each time 
 		
 		char *newBuffer = new char[1017];
