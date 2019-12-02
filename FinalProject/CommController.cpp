@@ -226,15 +226,15 @@ DWORD CommController::handleRead(LPVOID input) {
 				switch (stateController->getState()) {
 				case TX:
 					// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
-					readHandle(2);
+					readHandle(3);
 					break;
 				case PREP_TX:
 					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-					readHandle(2);
+					readHandle(3);
 					break;
 				case IDLE:
 					//Expect a ENQ and only an ENQ Control Code only
-					readHandle(2);
+					readHandle(3);
 					break;
 				case RTR:
 					//Expect a data frame
@@ -253,9 +253,9 @@ DWORD CommController::handleRead(LPVOID input) {
 
 void CommController::readHandle(DWORD bytesToReceive) {
 	// Control Codes are 2 chars
-	char controlBuffer[2];
+	char controlBuffer[3];
 	char frameBuffer[1017];
-	DWORD CONTROL_SIZE = 2;
+	DWORD CONTROL_SIZE = 3;
 	DWORD lastError;
 	DWORD bytesReceived;
 	//Expect Control Code
@@ -272,7 +272,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 
 	// ReadFile
 	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
-		if (ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
+		if (ReadFile(commHandle, inputBuffer, bytesToReceive-1, &bytesReceived, &overlapRead)) {
 			//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
 			ClearCommError(this->commHandle, &lastError, NULL);
 			int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
