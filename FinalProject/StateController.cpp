@@ -2,6 +2,8 @@
 #include "ControlCodes.h"
 #include "CommController.h"
 #include "SessionService.h"
+#include "StateControllerHelper.h"
+
 void StateController::parseDataFrame(char* frame)
 {
 	//CRC on frame using byte 1018-1022
@@ -28,12 +30,13 @@ DWORD StateController::handleProtocolWriteEvents() {
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 			if (indexOfSignaledEvent == 0) {
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
+				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 			}
 			else {
 				setState(PREP_RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
@@ -45,27 +48,26 @@ DWORD StateController::handleProtocolWriteEvents() {
 			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 5) {
 				setState(RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else if (indexOfSignaledEvent == 6) {
 				setState(RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else {
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
 			break;
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
-			// Getting null pointer since deque is empty not sure how to fill this
-			if (outputBuffer.front() == nullptr) {
+			if (outputBuffer.empty()) {
 				SetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
 			else {
@@ -74,7 +76,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				int resentCounter = 0;
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					sendFrame(outputBuffer.front());
+					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
@@ -111,7 +113,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendFrame
+-- FUNCTION:	sendFrameToCommController
 --
 -- DATE:		Nov 26, 2019
 --
@@ -126,11 +128,13 @@ DWORD StateController::handleProtocolWriteEvents() {
 -- RETURNS:		void
 --
 -- NOTES:
--- Call this function to write the next frame in the output buffer to the serial port. This function
+-- Call this function to write the next frame in the output buffer to the serial port. This function relies on the StateHelper
+-- to package the frame, given only the pointer to the data stored in the output buffer. This function
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendFrame(char* frame) {
-	comm->writeDataToPort(frame);
+void StateController::sendFrameToCommController(std::string data) {
+	std::string frame = sHelper->buildFrame(data);
+	comm->writeFrameToPort(frame);
 }
 
 void StateController::handleInput(char* input)
@@ -204,7 +208,7 @@ int StateController::verifyInput(char* input) {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendCommunicationMessage
+-- FUNCTION:	sendCommunicationMessageToCommController
 --
 -- DATE:		Nov 26, 2019
 --
@@ -219,35 +223,35 @@ int StateController::verifyInput(char* input) {
 -- RETURNS:		void
 --
 -- NOTES:
--- Call this function to write a control message to the port. 
+-- Call this function to write a control message to the port.
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendCommunicationMessage(DWORD event) {
+void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	switch (event) {
 	case 0: //IDLE_FILE_INPUT
 		if (state == IDLE) {
-			comm->writeDataToPort(&ENQ);
+			comm->writeControlMessageToPort(&ENQ);
 			setState(PREP_TX);
 		}
 		break;
 	case 5: //RTR_FILE_INPUT
 			// This is when we have a file to send Shouldn't be sending anyhting only changing our Reqs to ACKS
 		if (state == IDLE) {
-			comm->writeDataToPort(&ENQ);
+			comm->writeControlMessageToPort(&ENQ);
 			setState(PREP_TX);
 		}
 		else if (state == RX) {
-			comm->writeDataToPort(&REQ0);
+			comm->writeControlMessageToPort(&REQ0);
 		}
 		break;
 	case 1: //IDLE_RECEIVE_ENQ
 		if (outputBuffer.size() == 0) { //output buffer is empty
-			comm->writeDataToPort(&ACK0); // This should either be ACK0 or ACK1
+			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
 		}
 		break;
 	case 6: //RTR_RECEIVE_FRAME
 		//Perform CRC Validation on received data
 		if (true) { // frame is valid
-			comm->writeDataToPort(&ACK0); // This should either be ACK0 or ACK1
+			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
 		}
 		else {
 			inputBuffer = { 0 }; // Clear input buffer. Discard frame
@@ -255,7 +259,7 @@ void StateController::sendCommunicationMessage(DWORD event) {
 		break;
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS) {
-			comm->writeDataToPort(&EOT);
+			comm->writeControlMessageToPort(&EOT);
 			setState(IDLE);
 		}
 		break;

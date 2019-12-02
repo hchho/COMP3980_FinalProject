@@ -10,8 +10,7 @@
 #include "ErrorHandler.h"
 #include "DisplayService.h"
 #include "States.h"
-
-using namespace std;
+#include <vector>
 
 class StateController;
 /*------------------------------------------------------------------------------------------------------------------
@@ -101,10 +100,10 @@ public:
 	DWORD handleRead(LPVOID input);
 	void readHandle(DWORD bytesToReceive);
 	VOID drawBufferToWindow(const char* input, char delimiter);
-	void sendCommunicationMessage(DWORD event);
 	void setStateController(StateController* stateController) { this->stateController = stateController;};
 
-	VOID writeDataToPort(const char* frame);
+	VOID writeControlMessageToPort(const char* frame);
+	VOID writeFrameToPort(std::string frame);
 
 	// Below are inline functions for this class
 

@@ -122,15 +122,24 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
-VOID CommController::writeDataToPort(const char* frame)
+VOID CommController::writeFrameToPort(std::string frame)
 {
 	OVERLAPPED overlapped;
-	DWORD fLen = strlen(frame);
-	if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
+	 LPCSTR pointerToBufferStart = &frame[0];
+	 if (!WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &overlapped)) {
+	//DWORD fLen = strlen(frame);
+	//if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
 		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
 	}
 }
 
+VOID CommController::writeControlMessageToPort(const char* controlMessage)
+{
+	OVERLAPPED overlapped;
+	if (!WriteFile(commHandle, controlMessage, 1024, NULL, &overlapped)) {
+		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
+	}
+}
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	drawInput
 --
