@@ -31,10 +31,9 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 	frame.push_back(SYN);
 	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
 	frame.push_back(STX);
-	// --------------- COPY DATA FROM POSITIONS 2 - 1018 ------------------
-	for (int i = 0; i < 1017; ++i) {
-		frame.push_back(data.at(i));
-	}
+	// --------------- COPY DATA FROM POSITIONS 2 - 1018 -----------------
+
+	appendDataWithNullChars(data);
 
 	//TODO MISSING CRC IMPLEMENTATION TO ADD INTO FRAME
 	//int crc = calculatecrc(data)
@@ -81,6 +80,15 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 //	return frame;
 //}
 
+std::string StateControllerHelper::appendDataWithNullChars(std::string& data) {
+	size_t dataSize = data.size();
+
+	if (dataSize < 1017) {
+		while (++dataSize < 1017) {
+			data.push_back(_NUL);
+		}
+	}
+}
 
 std::string StateControllerHelper::buildCRCString(int crc_value)
 {
