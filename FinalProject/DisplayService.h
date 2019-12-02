@@ -39,6 +39,8 @@ private:
 	int xCoord = 0;
 	int yCoord = 0;
 	HWND* windowHandle;
+	int yPos = 0;
+	SCROLLINFO si;
 public:
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	displayMessageBox
@@ -92,4 +94,5 @@ public:
 	HWND* getWindowHandle();
 	VOID drawStringBuffer(const char* readBuffer, char delimiter = '0');
 	void setMenuItemState(BOOL state);
+	void scrollWindow(WPARAM wParam);
 };

@@ -192,8 +192,10 @@ VOID SessionService::handleConnectMode(UINT Message, WPARAM wParam) {
 			//commController->handleParam(&wParam);
 			break;
 		}
+	case WM_VSCROLL:
+		dispService->scrollWindow(wParam);
+		break;
 	}
-
 }
 
 /*------------------------------------------------------------------------------------------------------------------
