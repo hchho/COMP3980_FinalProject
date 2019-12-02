@@ -32,7 +32,7 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
 	frame.push_back(STX);
 	// --------------- COPY DATA FROM POSITIONS 2 - 1018 ------------------
-	for (int i = 0; i < 1017; ++i) {
+	for (auto i = 0; i < data.size(); ++i) {
 		frame.push_back(data.at(i));
 	}
 
@@ -84,29 +84,29 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 
 std::string StateControllerHelper::buildCRCString(int crc_value)
 {
-
-	char crcArr[4];
+	const int ARR_SIZE = 4;
+	char crcArr[ARR_SIZE];
 
 	std::stringstream stream;
 	stream << std::hex << crc_value;
 	std::string result(stream.str());
 
-	std::string hexArr[4] = { result.substr(0, 2), result.substr(2, 2),
-		result.substr(4, 2), result.substr(6, 2) };
+	//std::string hexArr[ARR_SIZE] = { result.substr(0, 2), result.substr(2, 2),
+	//	result.substr(4, 2), result.substr(6, 2) };
 
-	for (int i = 0; i < std::strlen(crcArr); i++)
-	{
+	//for (int i = 0; i < ARR_SIZE; i++)
+	//{
 
-		std::stringstream currHex;
+	//	std::stringstream currHex;
 
-		currHex << std::hex << hexArr[i];
-		int tempInt;
-		currHex >> tempInt;
-		crcArr[i] = tempInt;
+	//	currHex << std::hex << hexArr[i];
+	//	int tempInt;
+	//	currHex >> tempInt;
+	//	crcArr[i] = tempInt;
 
-	}
+	//}
 
-	return crcArr;
+	return result;
 }
 
 //std::string StateControllerHelper::getFrameContent(char* frame)

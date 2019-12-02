@@ -30,9 +30,6 @@
     <ClCompile Include="FinalProject\StateController.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="FinalProject\ErrorHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FinalProject\StateControllerHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -94,8 +91,5 @@
     <ResourceCompile Include="finalproject\WinMenu.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FinalProject\WinMenu.aps" />
   </ItemGroup>
 </Project>

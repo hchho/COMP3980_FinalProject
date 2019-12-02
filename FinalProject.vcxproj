@@ -105,6 +105,7 @@
     <ClCompile Include="finalproject\DisplayService.cpp" />
     <ClCompile Include="finalproject\SessionService.cpp" />
     <ClCompile Include="FinalProject\StateController.cpp" />
+    <ClCompile Include="FinalProject\StateControllerHelper.cpp" />
     <ClCompile Include="finalproject\WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +122,7 @@
     <ClInclude Include="finalproject\Platform.h" />
     <ClInclude Include="finalproject\SessionService.h" />
     <ClInclude Include="FinalProject\StateController.h" />
+    <ClInclude Include="FinalProject\StateControllerHelper.h" />
     <ClInclude Include="FinalProject\States.h" />
     <ClInclude Include="finalproject\utils.h" />
     <ClInclude Include="finalproject\WINDOW.h" />
