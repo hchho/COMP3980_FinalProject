@@ -278,13 +278,14 @@ void CommController::readHandle(DWORD bytesToReceive){
 			// Acknowleding there is a error on comm port
 			// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
 			//
-			ClearCommError(commHandle, &lastError, NULL );
+			ClearCommError(commHandle, &lastError, NULL);
 			lastError = 0;
 		}
 	}
 	else {
 		// Read file returns false if it fails or is returning asynchronously which is what er're going 
 		// Handle issues with actually failing to communitcate here
+		lastError = GetLastError();
 	}
 	//Clear all characters unread in buffer on handle;
 	PurgeComm(commHandle, PURGE_RXCLEAR);
