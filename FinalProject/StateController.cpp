@@ -172,6 +172,7 @@ void StateController::handleInput(char* input)
 			//	Parse Frame
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
 			serv->drawStringBuffer(input);
+			SetEvent(events->handles[6]);
 		}
 		break;
 	}
