@@ -66,8 +66,9 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.empty()) {
-				SetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				sendCommunicationMessageToCommController(indexOfSignaledEvent);
+				indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+				sendCommunicationMessageToCommController(9);
+				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
 			}
 			else {
@@ -84,10 +85,12 @@ DWORD StateController::handleProtocolWriteEvents() {
 					}
 					setState(RTS); // following protocol, need to set back to RTS
 				}
+				// Received an ack
 				if (indexOfSignaledEvent == 3) {
 					setState(RTS);
 					continue;
 				}
+				//Received an Req
 				else if (indexOfSignaledEvent == 4) {
 					setState(RTS);
 					releaseTX = !releaseTX;
@@ -147,12 +150,12 @@ void StateController::handleInput(char* input)
 		// Verifies based on state  checks for synch bit as well
 		//Received AC0
 		if (verifyInput(input) == 1) {
-			SetEvent(events->handles[3]);
 			outputBuffer.pop();
+			SetEvent(events->handles[3]);
 		}
 		if (verifyInput(input) == 2) {
-			SetEvent(events->handles[4]);
 			outputBuffer.pop();
+			SetEvent(events->handles[4]);
 		}
 			//SetEvent()
 		break;
@@ -189,20 +192,30 @@ void StateController::handleInput(char* input)
 
 
 int StateController::verifyInput(char* input) {
+	int i = *input;
+	int a1 = ACK1;
+	int a0 = ACK0;
 	switch (state) {
 	case TX:
 		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
 		// Method with logic to handle
 		// TODO: check to make sure this is standardized
 		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
-		if (synch)
-			return strncmp(input, &ACK1, 2) == 0 ? 1 : strncmp(input, &REQ1, 2) == 0 ? 2 : 0;
+
+		if (1) {
+
+			//if (strncmp(input, &ACK1, 2) == 0)
+			//	return 1;
+			//if (strncmp(input, &REQ1, 2) == 0)
+			//	return 2;
+			return i == a1;
+		}
 		else
 			return strncmp(input, &ACK0, 2) == 0 ? 1 : strncmp(input, &REQ0, 2) == 0 ? 2 : 0;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
-		return strncmp(input, &ACK0, 2) || strncmp(input, &ACK1, 2);
+		return i == a0 || i == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return strncmp(input, &ENQ, 2) == 0;

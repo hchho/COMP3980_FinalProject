@@ -130,6 +130,9 @@
   <ItemGroup>
     <ResourceCompile Include="finalproject\WinMenu.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="sample\Text.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

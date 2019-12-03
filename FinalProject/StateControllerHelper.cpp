@@ -36,7 +36,7 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 		frame.push_back(data.at(i));
 	}
 
-	appendDataWithNullChars(data);
+	//appendDataWithNullChars(data);
 
 	//TODO MISSING CRC IMPLEMENTATION TO ADD INTO FRAME
 	//int crc = calculatecrc(data)
@@ -83,7 +83,7 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 //	return frame;
 //}
 
-std::string StateControllerHelper::appendDataWithNullChars(std::string& data) {
+void StateControllerHelper::appendDataWithNullChars(std::string& data) {
 	size_t dataSize = data.size();
 
 	if (dataSize < 1017) {

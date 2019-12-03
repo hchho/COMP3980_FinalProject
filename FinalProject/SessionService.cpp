@@ -279,11 +279,12 @@ DWORD SessionService::readFile(LPVOID input) {
 		}
 		// output buffer is a pointer to char *  if they all point to the same buffer can't really send anything will have to instantiate a new buffer each time 
 		
-		char *newBuffer = new char[1017];
-		strcpy(newBuffer, ReadBuffer);
-		stateController->outputBuffer.emplace(newBuffer);
+		std::string newBuffer{ ReadBuffer };
+	
+		stateController->outputBuffer.push(newBuffer);
 		
-		
+		memset(&ReadBuffer, 0, sizeof(ReadBuffer));
+
 		// Setting event to File Input 
 		// do we need to repeatedly set this over and over?
 		SetEvent(stateController->getEvents()->handles[0]);

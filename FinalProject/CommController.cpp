@@ -122,9 +122,10 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
-VOID CommController::writeFrameToPort(std::string frame)
+VOID CommController::writeFrameToPort(std::string &frame)
 {
-	 LPCSTR pointerToBufferStart = &frame[0];
+	LPCSTR pointerToBufferStart = nullptr;
+	 pointerToBufferStart = &frame[0];
 	 if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED()) != 0) {
 	//DWORD fLen = strlen(frame);
 	//if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
