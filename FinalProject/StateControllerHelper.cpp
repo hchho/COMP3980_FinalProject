@@ -32,6 +32,9 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
 	frame.push_back(STX);
 	// --------------- COPY DATA FROM POSITIONS 2 - 1018 -----------------
+	for (auto i = 0; i < data.size(); ++i) {
+		frame.push_back(data.at(i));
+	}
 
 	appendDataWithNullChars(data);
 
