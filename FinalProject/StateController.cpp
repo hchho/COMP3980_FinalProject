@@ -23,6 +23,8 @@ void StateController::drawBufferToWindow(const char* buff)
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
 DWORD StateController::handleProtocolWriteEvents() {
 	DWORD indexOfSignaledEvent;
+	std::random_device rdm;
+	std::mt19937 generator(rdm());
 
 	while (comm->getIsComActive()) {
 		switch (getState()) {
@@ -33,6 +35,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+				// Wait for ACK0/ACK1/ENQ from reading side to be signalled for timeout -- StateController 170
 			}
 			else {
 				setState(PREP_RX);
@@ -154,16 +157,21 @@ void StateController::handleInput(char* input)
 			SetEvent(events->handles[4]);
 			outputBuffer.pop();
 		}
-			//SetEvent()
+		//SetEvent()
 		break;
 
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACk either one will work
-		if (verifyInput(input))
+		if (verifyInput(input) == 0 || verifyInput(input) == 1) {
 			SetEvent(events->handles[2]);
+		}
+		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
+			std::random_device rdm;
+			std::mt19937 generator(rdm());
+			DWORD throwawayENQ = WaitForSingleObject(getEvents()->handles[2], distribution(generator));
+		}
 		break;
-
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		if (verifyInput(input))
@@ -173,9 +181,10 @@ void StateController::handleInput(char* input)
 	case RTR:
 
 		//Is it an EOT
-		if (verifyInput(input)){
+		if (verifyInput(input)) {
 			SetEvent(events->handles[7]);
-		} else {
+		}
+		else {
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
@@ -202,7 +211,9 @@ int StateController::verifyInput(char* input) {
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
-		return strncmp(input, &ACK0, 2) || strncmp(input, &ACK1, 2);
+		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
+		// 0 = ack0, 1 = ack1, 2 = ENQ
+		return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return strncmp(input, &ENQ, 2) == 0;

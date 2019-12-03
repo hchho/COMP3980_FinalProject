@@ -2,7 +2,6 @@
 #ifndef STATE_CONTROLLER_H
 #define STATE_CONTROLLER_H
 
-
 #include "States.h"
 #include "DisplayService.h"
 #include "ControlCodes.h"
@@ -11,11 +10,13 @@
 #include "StateControllerHelper.h"
 #include <queue>
 #include <string>
+#include <random>
 
 class CommController;
 class SessionService;
 
 class StateController {
+
 private:
 	STATES state;
 	int synch;
@@ -31,6 +32,7 @@ private:
 	CommController* comm;
 	DisplayService* serv;
 	StateControllerHelper* sHelper;
+	std::uniform_int_distribution<int> distribution{ 0, 1000 };
 
 	// Handles data frame when in data read state and 
 	void parseDataFrame(char* frame);
@@ -49,8 +51,6 @@ public:
 		state = IDLE;
 	};
 	std::queue<std::string> outputBuffer;
-	//std::queue<char*> outputBuffer;
-
 
 	DWORD handleProtocolWriteEvents();
 	void handleInput(char* input);
