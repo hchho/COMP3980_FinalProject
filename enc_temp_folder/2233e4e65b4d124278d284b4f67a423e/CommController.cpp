@@ -265,8 +265,6 @@ void CommController::readHandle(DWORD bytesToReceive) {
 	// Control Codes are 2 chars
 	char controlBuffer[2];
 	char frameBuffer[1024];
-	memset(&frameBuffer, 0, sizeof(frameBuffer));
-	memset(&controlBuffer, 0, sizeof(controlBuffer));
 	DWORD CONTROL_SIZE = 2;
 	DWORD lastError;
 	DWORD bytesReceived;

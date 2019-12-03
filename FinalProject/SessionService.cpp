@@ -272,6 +272,8 @@ DWORD SessionService::readFile(LPVOID input) {
 
 	char ReadBuffer[1017] = { 0 }; // The buffer size should be defined somewhere
 
+	SetEvent(stateController->getEvents()->handles[0]);
+
 	//It should equal the buffer size - 1 to give room for null character
 	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
 		if (dwBytesRead == 0) {
@@ -281,12 +283,7 @@ DWORD SessionService::readFile(LPVOID input) {
 		
 		char *newBuffer = new char[1017];
 		strcpy(newBuffer, ReadBuffer);
-		stateController->outputBuffer.emplace(newBuffer);
-		
-		
-		// Setting event to File Input 
-		// do we need to repeatedly set this over and over?
-		SetEvent(stateController->getEvents()->handles[0]);
+		stateController->outputBuffer.push(newBuffer);
 	}
 	ResetEvent(stateController->getEvents()->handles[0]);
 
