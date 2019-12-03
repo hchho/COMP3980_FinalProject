@@ -11,6 +11,7 @@ public:
 	std::string buildCRCString(int crc_value);
 	std::string getFrameContent(char* frame);
 	std::string buildFrame(std::string data);
-
+	std::string appendDataWithNullChars(std::string& data);
 };
+
 #endif

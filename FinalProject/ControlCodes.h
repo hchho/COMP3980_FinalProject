@@ -2,6 +2,7 @@
 
 #ifndef CONTROL_CODES_H
 #define CONTROL_CODES_H
+constexpr const char _NUL = 0x0000;
 constexpr const char ENQ = 0x0005;
 constexpr const char ACK0 = 0x0006;
 constexpr const char ACK1 = 0xFF06;
