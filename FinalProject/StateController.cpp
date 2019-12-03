@@ -179,7 +179,9 @@ void StateController::handleInput(char* input)
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
-			serv->drawStringBuffer(input);
+			//serv->drawStringBuffer(input);
+			sess->writeToFile(input);
+			SetEvent(events->handles[6]);
 		}
 		break;
 	}
