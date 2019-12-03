@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <stdlib.h>
 #include <windows.h>
@@ -292,3 +293,10 @@ DWORD SessionService::readFile(LPVOID input) {
 	CloseHandle(hFile);
 	return 0;
 }
+
+VOID SessionService::writeToFile(const char* data) {
+	std::fstream outputFile;
+	outputFile.open("output.txt", std::fstream::app);
+	outputFile << data;
+	outputFile.close();
+}	
