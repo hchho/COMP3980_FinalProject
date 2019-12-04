@@ -125,7 +125,7 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 VOID CommController::writeFrameToPort(std::string &frame)
 {
 	LPCSTR pointerToBufferStart = nullptr;
-	LPCSTR pointerToBufferStart = &frame[0];
+	pointerToBufferStart = &frame[0];
 	// purge output buffer before sending
 	PurgeComm(commHandle, PURGE_TXCLEAR);
 	if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED()) == 0) {
