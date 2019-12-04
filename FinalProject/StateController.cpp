@@ -46,7 +46,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 3000); //3000
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 5) {
@@ -69,7 +69,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.empty()) {
-				indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+
 				sendCommunicationMessageToCommController(9);
 				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
@@ -78,11 +78,12 @@ DWORD StateController::handleProtocolWriteEvents() {
 				// Two possible handles to be signaled: TX_RECEIVE_ACK ,TX_RECEIVE_REQ
 				int errorCounter = 0;
 				int resentCounter = 0;
+				// Error Repeadtely sends 3 frames or else breaks
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);//1000
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
 						break;
 					}
@@ -97,15 +98,16 @@ DWORD StateController::handleProtocolWriteEvents() {
 				else if (indexOfSignaledEvent == 4) {
 					setState(RTS);
 					releaseTX = !releaseTX;
+					break;
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
-				if (resentCounter++ == 3 && indexOfSignaledEvent == WAIT_TIMEOUT) {
+				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
 					setState(IDLE);
 				}
 			}
 			break;
 		case STATES::PREP_TX:
-			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
+			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);//1000
 			setState(RTS);
 			ResetEvent(getEvents()->handles[2]);
 			break;

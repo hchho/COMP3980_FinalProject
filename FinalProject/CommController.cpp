@@ -129,8 +129,6 @@ VOID CommController::writeFrameToPort(std::string &frame)
 	// purge output buffer before sending
 	PurgeComm(commHandle, PURGE_TXCLEAR);
 	if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED()) == 0) {
-		//DWORD fLen = strlen(frame);
-		//if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
 		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
 	}
 }
@@ -306,8 +304,9 @@ void CommController::readHandle(DWORD bytesToReceive) {
 	else {
 		// Read file returns false if it fails or is returning asynchronously which is what er're going 
 		// Handle issues with actually failing to communitcate here
+		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if (bytesReceived != 0) {
+		if (bytesReceived == 1024) {
 			stateController->handleInput(inputBuffer);
 		}
 	}
