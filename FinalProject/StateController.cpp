@@ -23,6 +23,7 @@ void StateController::drawBufferToWindow(const char* buff)
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
 DWORD StateController::handleProtocolWriteEvents() {
 	DWORD indexOfSignaledEvent;
+	DWORD indexOfSignaledEvent2;
 	std::random_device rdm;
 	std::mt19937 generator(rdm());
 
@@ -79,18 +80,22 @@ DWORD StateController::handleProtocolWriteEvents() {
 				int errorCounter = 0;
 				int resentCounter = 0;
 				// Error Repeadtely sends 3 frames or else breaks
-				while (errorCounter++ < 3) {
+				while (true) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
+					indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], 1000); //ACK
+					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1000); //REQ
+
+					//indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) { // We received ACK or REQ
 						break;
 					}
 					setState(RTS); // following protocol, need to set back to RTS
 				}
 				// Received an ack
-				if (indexOfSignaledEvent == 3) {
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+				if (indexOfSignaledEvent == 0) {
 					setState(RTS);
 					continue;
 				}
@@ -101,6 +106,8 @@ DWORD StateController::handleProtocolWriteEvents() {
 					break;
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
+
+
 				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
 					sendCommunicationMessageToCommController(9);
 					DisplayService::displayMessageBox("Sending EOT Finished sending");
@@ -109,7 +116,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			}
 			break;
 		case STATES::PREP_TX:
-			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], 1000);
+			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
 				setState(IDLE);
 				break;
@@ -209,9 +216,10 @@ void StateController::handleInput(char* input)
 
 
 int StateController::verifyInput(char* input) {
-	int i = *input;
+	int i = *(input + 1);
 	int a1 = ACK1;
 	int a0 = ACK0;
+	int number;
 	int eot = EOT;
 	switch (state) {
 	case TX:
@@ -239,7 +247,7 @@ int StateController::verifyInput(char* input) {
 		return i == a0 || i == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
-		return strncmp(input, &ENQ, 2) == 0;
+		return i == ENQ;
 	case RTR:
 		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
 		return i == eot;
