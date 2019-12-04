@@ -127,20 +127,25 @@ VOID CommController::writeFrameToPort(std::string &frame)
 	LPCSTR pointerToBufferStart = nullptr;
 	pointerToBufferStart = &frame[0];
 	// purge output buffer before sending
-	PurgeComm(commHandle, PURGE_TXCLEAR);
-	if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED()) == 0) {
-		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
+	int error;
+	if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED())) {
+		//DWORD fLen = strlen(frame);
+		//if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
+		error = GetLastError();
+		DisplayService::displayMessageBox("WriteFile filed for frame");
 	}
+	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
 VOID CommController::writeControlMessageToPort(const char* controlMessage)
 {
 	int error;
 	DWORD fLen = strlen(controlMessage);
-	if (WriteFile(commHandle, controlMessage, fLen, NULL, &OVERLAPPED()) != 0) {
+	if (WriteFile(commHandle, controlMessage, fLen, NULL, &OVERLAPPED())) {
 		error = GetLastError();
-		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
+		DisplayService::displayMessageBox("WriteFile filed for code");
 	}
+	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	drawInput
@@ -221,7 +226,7 @@ DWORD CommController::handleRead(LPVOID input) {
 
 	// Sets Comm Mask
 	if (!SetCommMask(commHandle, EV_RXCHAR)) {
-		MessageBox(NULL, (LPCWSTR)"SetCommMask failed.", (LPCWSTR)"Error", MB_OK);
+		DisplayService::displayMessageBox("SetCommMask failed");
 	}
 	// Read Loop
 	while (isComActive) {
