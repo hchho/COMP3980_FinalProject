@@ -69,8 +69,9 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.empty()) {
-				SetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				sendCommunicationMessageToCommController(indexOfSignaledEvent);
+				indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+				sendCommunicationMessageToCommController(9);
+				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
 			}
 			else {
@@ -87,10 +88,12 @@ DWORD StateController::handleProtocolWriteEvents() {
 					}
 					setState(RTS); // following protocol, need to set back to RTS
 				}
+				// Received an ack
 				if (indexOfSignaledEvent == 3) {
 					setState(RTS);
 					continue;
 				}
+				//Received an Req
 				else if (indexOfSignaledEvent == 4) {
 					setState(RTS);
 					releaseTX = !releaseTX;
@@ -150,12 +153,12 @@ void StateController::handleInput(char* input)
 		// Verifies based on state  checks for synch bit as well
 		//Received AC0
 		if (verifyInput(input) == 1) {
-			SetEvent(events->handles[3]);
 			outputBuffer.pop();
+			SetEvent(events->handles[3]);
 		}
 		if (verifyInput(input) == 2) {
-			SetEvent(events->handles[4]);
 			outputBuffer.pop();
+			SetEvent(events->handles[4]);
 		}
 		//SetEvent()
 		break;
@@ -208,8 +211,15 @@ int StateController::verifyInput(char* input) {
 		// Method with logic to handle
 		// TODO: check to make sure this is standardized
 		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
-		if (synch)
-			return strncmp(input, &ACK1, 1) == 0 ? 1 : strncmp(input, &REQ1, 1) == 0 ? 2 : 0;
+
+		if (1) {
+
+			//if (strncmp(input, &ACK1, 2) == 0)
+			//	return 1;
+			//if (strncmp(input, &REQ1, 2) == 0)
+			//	return 2;
+			return i == a1;
+		}
 		else
 			return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
 	case PREP_TX:
@@ -217,7 +227,8 @@ int StateController::verifyInput(char* input) {
 		// Currently just expect an ACK either one will work
 		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
 		// 0 = ack0, 1 = ack1, 2 = ENQ
-		return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
+		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
+		return i == a0 || i == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return strncmp(input, &ENQ, 2) == 0;

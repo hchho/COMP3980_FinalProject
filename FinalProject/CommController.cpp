@@ -122,8 +122,9 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
-VOID CommController::writeFrameToPort(std::string frame)
+VOID CommController::writeFrameToPort(std::string &frame)
 {
+	LPCSTR pointerToBufferStart = nullptr;
 	LPCSTR pointerToBufferStart = &frame[0];
 	// purge output buffer before sending
 	PurgeComm(commHandle, PURGE_TXCLEAR);

@@ -103,7 +103,7 @@ public:
 	void setStateController(StateController* stateController) { this->stateController = stateController;};
 
 	VOID writeControlMessageToPort(const char* frame);
-	VOID writeFrameToPort(std::string frame);
+	VOID writeFrameToPort(std::string &frame);
 
 	// Below are inline functions for this class
 

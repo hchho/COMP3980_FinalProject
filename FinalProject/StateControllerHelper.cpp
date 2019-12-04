@@ -36,7 +36,7 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 		frame.push_back(data.at(i));
 	}
 
-	appendDataWithNullChars(data);
+	//appendDataWithNullChars(data);
 
 	//TODO MISSING CRC IMPLEMENTATION TO ADD INTO FRAME
 	//int crc = calculatecrc(data)
