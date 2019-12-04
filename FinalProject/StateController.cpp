@@ -69,6 +69,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.empty()) {
+
 				sendCommunicationMessageToCommController(9);
 				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
@@ -77,6 +78,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				// Two possible handles to be signaled: TX_RECEIVE_ACK ,TX_RECEIVE_REQ
 				int errorCounter = 0;
 				int resentCounter = 0;
+				// Error Repeadtely sends 3 frames or else breaks
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());

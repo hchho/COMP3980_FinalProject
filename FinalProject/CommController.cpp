@@ -309,8 +309,9 @@ void CommController::readHandle(DWORD bytesToReceive) {
 	else {
 		// Read file returns false if it fails or is returning asynchronously which is what er're going 
 		// Handle issues with actually failing to communitcate here
+		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if (bytesReceived != 0) {
+		if (bytesReceived == 1024) {
 			stateController->handleInput(inputBuffer);
 		}
 	}
