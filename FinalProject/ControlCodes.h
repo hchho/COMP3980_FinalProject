@@ -4,7 +4,7 @@
 #define CONTROL_CODES_H
 
 constexpr const char _NUL = 0x00;
-constexpr const  char ENQ = 0x0005;
+constexpr const  char ENQ = 5;
 constexpr const  char ACK0 = 0x0006;
 constexpr const  char ACK1 = 0xFF06;
 constexpr const  char REQ0 = 0x0011;

@@ -140,8 +140,13 @@ VOID CommController::writeFrameToPort(std::string &frame)
 VOID CommController::writeControlMessageToPort(const char* controlMessage)
 {
 	int error;
+	std::string test;
+	test.push_back(_NUL);
+	test.push_back(*controlMessage);
+	LPCSTR pointerToMessageStart = nullptr;
+	pointerToMessageStart = &test[0];
 	DWORD fLen = strlen(controlMessage);
-	if (WriteFile(commHandle, controlMessage, fLen, NULL, &OVERLAPPED())) {
+	if (WriteFile(commHandle, pointerToMessageStart, test.size(), NULL, &OVERLAPPED())) {
 		error = GetLastError();
 		DisplayService::displayMessageBox("WriteFile filed for code");
 	}
