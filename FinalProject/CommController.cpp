@@ -304,11 +304,12 @@ void CommController::readHandle(DWORD bytesToReceive) {
 			stateController->handleInput(inputBuffer);
 		}
 		else {
-			// Acknowleding there is a error on comm port
-			// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
-			//
-			ClearCommError(commHandle, &lastError, NULL);
-			lastError = 0;
+			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+			if (bytesReceived > 2) {
+				stateController->handleInput(inputBuffer);
+			}
+			//ClearCommError(commHandle, &lastError, NULL);
+			//lastError = 0;
 		}
 	}
 	else {
@@ -316,7 +317,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		// Handle issues with actually failing to communitcate here
 		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if (bytesReceived == 1024) {
+		if (bytesReceived > 2) {
 			stateController->handleInput(inputBuffer);
 		}
 	}

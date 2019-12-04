@@ -47,7 +47,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 3000);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 5) {
@@ -63,6 +63,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				setState(RTR);
 			}
 			else {
+				serv->drawStringBuffer("Timed out from RTR");
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
@@ -109,6 +110,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 
 
 				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
+					serv->drawStringBuffer("Timed out from RTS");
 					sendCommunicationMessageToCommController(9);
 					DisplayService::displayMessageBox("Sending EOT Finished sending");
 					setState(IDLE);
@@ -118,6 +120,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::PREP_TX:
 			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
+				serv->drawStringBuffer("Timed out from PREP_TX");
 				setState(IDLE);
 				break;
 			}
