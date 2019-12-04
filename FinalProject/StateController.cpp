@@ -234,7 +234,7 @@ int StateController::verifyInput(char* input) {
 			//	return 1;
 			//if (strncmp(input, &REQ1, 2) == 0)
 			//	return 2;
-			return i == a1;
+			return *++input == a1;
 		}
 		else
 			return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
@@ -244,13 +244,13 @@ int StateController::verifyInput(char* input) {
 		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
 		// 0 = ack0, 1 = ack1, 2 = ENQ
 		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
-		return i == a0 || i == a1;
+		return *++input == a0 || *++input == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return i == ENQ;
 	case RTR:
 		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
-		return i == eot;
+		return *++input == eot;
 	}
 	return 0;
 }
