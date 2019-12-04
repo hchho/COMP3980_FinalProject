@@ -242,15 +242,15 @@ DWORD CommController::handleRead(LPVOID input) {
 				switch (stateController->getState()) {
 				case TX:
 					// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
-					readHandle(2);
+					readHandle(3);
 					break;
 				case PREP_TX:
 					// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-					readHandle(2);
+					readHandle(3);
 					break;
 				case IDLE:
 					//Expect a ENQ and only an ENQ Control Code only
-					readHandle(2);
+					readHandle(3);
 					break;
 				case RTR:
 					//Expect a data frame
