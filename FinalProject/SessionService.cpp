@@ -271,7 +271,7 @@ DWORD SessionService::readFile(LPVOID input) {
 	}
 
 	char ReadBuffer[1017] = { 0 }; // The buffer size should be defined somewhere
-
+	PurgeComm(hFile, PURGE_RXCLEAR);
 	//It should equal the buffer size - 1 to give room for null character
 	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
 		if (dwBytesRead == 0) {
