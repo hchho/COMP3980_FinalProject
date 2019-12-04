@@ -122,15 +122,31 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
-VOID CommController::writeDataToPort(const char* frame)
+VOID CommController::writeFrameToPort(std::string &frame)
 {
-	OVERLAPPED overlapped;
-	DWORD fLen = strlen(frame);
-	if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
-		MessageBox(NULL, (LPCWSTR)"WriteFile failed.", (LPCWSTR)"Error", MB_OK);
+	LPCSTR pointerToBufferStart = nullptr;
+	pointerToBufferStart = &frame[0];
+	// purge output buffer before sending
+	int error;
+	if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED())) {
+		//DWORD fLen = strlen(frame);
+		//if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
+		error = GetLastError();
+		DisplayService::displayMessageBox("WriteFile filed for frame");
 	}
+	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
+VOID CommController::writeControlMessageToPort(const char* controlMessage)
+{
+	int error;
+	DWORD fLen = strlen(controlMessage);
+	if (WriteFile(commHandle, controlMessage, fLen, NULL, &OVERLAPPED())) {
+		error = GetLastError();
+		DisplayService::displayMessageBox("WriteFile filed for code");
+	}
+	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+}
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	drawInput
 --
@@ -210,7 +226,7 @@ DWORD CommController::handleRead(LPVOID input) {
 
 	// Sets Comm Mask
 	if (!SetCommMask(commHandle, EV_RXCHAR)) {
-		MessageBox(NULL, (LPCWSTR)"SetCommMask failed.", (LPCWSTR)"Error", MB_OK);
+		DisplayService::displayMessageBox("SetCommMask failed");
 	}
 	// Read Loop
 	while (isComActive) {
@@ -239,7 +255,7 @@ DWORD CommController::handleRead(LPVOID input) {
 				case RTR:
 					//Expect a data frame
 					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
-					readHandle(1017);
+					readHandle(1024);
 					break;
 				}
 			}
@@ -253,9 +269,11 @@ DWORD CommController::handleRead(LPVOID input) {
 
 void CommController::readHandle(DWORD bytesToReceive) {
 	// Control Codes are 2 chars
-	char controlBuffer[3];
-	char frameBuffer[1017];
-	DWORD CONTROL_SIZE = 3;
+	char controlBuffer[2];
+	char frameBuffer[1024];
+	memset(&frameBuffer, 0, sizeof(frameBuffer));
+	memset(&controlBuffer, 0, sizeof(controlBuffer));
+	DWORD CONTROL_SIZE = 2;
 	DWORD lastError;
 	DWORD bytesReceived;
 	//Expect Control Code
@@ -269,36 +287,37 @@ void CommController::readHandle(DWORD bytesToReceive) {
 	char* inputBuffer = bytesToReceive > CONTROL_SIZE ? frameBuffer : controlBuffer;
 	int isOk = 0;
 
-
 	// ReadFile
 	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
-		if (ReadFile(commHandle, inputBuffer, bytesToReceive-1, &bytesReceived, &overlapRead)) {
-			//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
-			ClearCommError(this->commHandle, &lastError, NULL);
-			int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-			if ((lastError = GetLastError()) == ERROR_SUCCESS &&
-				GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
-				bytesReceived == bytesToReceive) {
-				stateController->handleInput(inputBuffer);
-			}
-			else {
-				// Acknowleding there is a error on comm port
-				// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
-				//
-				ClearCommError(commHandle, &lastError, NULL);
-				lastError = 0;
-			}
+	if (ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
+		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
+		ClearCommError(this->commHandle, &lastError, NULL);
+		int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
+			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
+			bytesReceived == bytesToReceive) {
+			stateController->handleInput(inputBuffer);
 		}
 		else {
-			// Read file returns false if it fails or is returning asynchronously which is what er're going 
-			// Handle issues with actually failing to communitcate here
-			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-				if (bytesReceived != 0) {
-					stateController->handleInput(inputBuffer);
-				}
+			// Acknowleding there is a error on comm port
+			// When do we enter this? last error is not IO PENDING  read operation is pending completeion asynchronously
+			//
+			ClearCommError(commHandle, &lastError, NULL);
+			lastError = 0;
 		}
+	}
+	else {
+		// Read file returns false if it fails or is returning asynchronously which is what er're going 
+		// Handle issues with actually failing to communitcate here
+		// Only for data frames
+		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+		if (bytesReceived == 1024) {
+			stateController->handleInput(inputBuffer);
+		}
+	}
 	CloseHandle(overlapRead.hEvent);
 	//Clear all characters unread in buffer on handle;
+	memset(&frameBuffer, 0, sizeof(frameBuffer));
 	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
@@ -369,7 +388,7 @@ VOID CommController::setCommConfig(LPCWSTR portName) {
 	GetCommConfig(
 		commHandle,
 		&commConfig,
-		(LPDWORD)& commConfig.dwSize
+		(LPDWORD)&commConfig.dwSize
 	);
 	if (!CommConfigDialog(portName, *displayService->getWindowHandle(), &commConfig)) {
 		ErrorHandler::handleError(ERROR_PORT_CONFIG);

@@ -6,13 +6,17 @@
 #include "DisplayService.h"
 #include "ControlCodes.h"
 #include "Events.h"
+#include "SessionService.h"
+#include "StateControllerHelper.h"
 #include <queue>
 #include <string>
-#include "SessionService.h"
+#include <random>
 
 class CommController;
 class SessionService;
+
 class StateController {
+
 private:
 	STATES state;
 	int synch;
@@ -27,6 +31,8 @@ private:
 	SessionService* sess;
 	CommController* comm;
 	DisplayService* serv;
+	StateControllerHelper* sHelper;
+	std::uniform_int_distribution<int> distribution{ 0, 1000 };
 
 	// Handles data frame when in data read state and 
 	void parseDataFrame(char* frame);
@@ -35,16 +41,16 @@ private:
 	void setState(STATES state) { this->state = state; };
 
 	int verifyInput(char* input);
+	void sendCommunicationMessageToCommController(DWORD event);
+	void sendFrameToCommController(std::string data);
 
-	void sendCommunicationMessage(DWORD event);
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
 	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess), events(new Events()) {
 		state = IDLE;
 	};
-	std::queue<char*> outputBuffer;
-
+	std::queue<std::string> outputBuffer;
 
 	DWORD handleProtocolWriteEvents();
 	void handleInput(char* input);
@@ -54,7 +60,5 @@ public:
 	// Getters
 	STATES getState() { return state; };
 
-
-	void sendFrame(char* frame);
 };
 #endif

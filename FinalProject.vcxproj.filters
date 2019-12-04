@@ -30,6 +30,9 @@
     <ClCompile Include="FinalProject\StateController.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="FinalProject\StateControllerHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="finalproject\CommController.h">
@@ -80,10 +83,16 @@
     <ClInclude Include="FinalProject\States.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FinalProject\StateControllerHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="finalproject\WinMenu.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="sample\Text.txt" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,8 @@
 #include "ControlCodes.h"
 #include "CommController.h"
 #include "SessionService.h"
+#include "StateControllerHelper.h"
+
 void StateController::parseDataFrame(char* frame)
 {
 	//CRC on frame using byte 1018-1022
@@ -21,6 +23,8 @@ void StateController::drawBufferToWindow(const char* buff)
 /* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
 DWORD StateController::handleProtocolWriteEvents() {
 	DWORD indexOfSignaledEvent;
+	std::random_device rdm;
+	std::mt19937 generator(rdm());
 
 	while (comm->getIsComActive()) {
 		switch (getState()) {
@@ -28,76 +32,88 @@ DWORD StateController::handleProtocolWriteEvents() {
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 			if (indexOfSignaledEvent == 0) {
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
+				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+				// Wait for ACK0/ACK1/ENQ from reading side to be signalled for timeout -- StateController 170
 			}
 			else {
 				setState(PREP_RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 3000);
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 5) {
 				setState(RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else if (indexOfSignaledEvent == 6) {
 				setState(RX);
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else {
-				sendCommunicationMessage(indexOfSignaledEvent);
+				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
 			break;
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
-			// Getting null pointer since deque is empty not sure how to fill this
-			if (outputBuffer.front() == nullptr) {
-				SetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				sendCommunicationMessage(indexOfSignaledEvent);
+			if (outputBuffer.empty()) {
+
+				sendCommunicationMessageToCommController(9);
+				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
 			}
 			else {
 				// Two possible handles to be signaled: TX_RECEIVE_ACK ,TX_RECEIVE_REQ
 				int errorCounter = 0;
 				int resentCounter = 0;
+				// Error Repeadtely sends 3 frames or else breaks
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					sendFrame(outputBuffer.front());
+					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
-					if (indexOfSignaledEvent != WAIT_TIMEOUT) {
+					indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
+					if (indexOfSignaledEvent != WAIT_TIMEOUT) { // We received ACK or REQ
 						break;
 					}
 					setState(RTS); // following protocol, need to set back to RTS
 				}
+				// Received an ack
 				if (indexOfSignaledEvent == 3) {
 					setState(RTS);
 					continue;
 				}
+				//Received an Req
 				else if (indexOfSignaledEvent == 4) {
 					setState(RTS);
 					releaseTX = !releaseTX;
+					break;
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
-				if (resentCounter++ == 3 && indexOfSignaledEvent == WAIT_TIMEOUT) {
+				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
+					sendCommunicationMessageToCommController(9);
+					DisplayService::displayMessageBox("Sending EOT Finished sending");
 					setState(IDLE);
 				}
 			}
 			break;
 		case STATES::PREP_TX:
-			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
+			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], 1000);
+			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
+				setState(IDLE);
+				break;
+			}
 			setState(RTS);
 			ResetEvent(getEvents()->handles[2]);
 			break;
@@ -111,7 +127,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendFrame
+-- FUNCTION:	sendFrameToCommController
 --
 -- DATE:		Nov 26, 2019
 --
@@ -126,11 +142,13 @@ DWORD StateController::handleProtocolWriteEvents() {
 -- RETURNS:		void
 --
 -- NOTES:
--- Call this function to write the next frame in the output buffer to the serial port. This function
+-- Call this function to write the next frame in the output buffer to the serial port. This function relies on the StateHelper
+-- to package the frame, given only the pointer to the data stored in the output buffer. This function
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendFrame(char* frame) {
-	comm->writeDataToPort(frame);
+void StateController::sendFrameToCommController(std::string data) {
+	std::string frame = sHelper->buildFrame(data);
+	comm->writeFrameToPort(frame);
 }
 
 void StateController::handleInput(char* input)
@@ -142,20 +160,29 @@ void StateController::handleInput(char* input)
 		// Method with logic to handle
 		// Verifies based on state  checks for synch bit as well
 		//Received AC0
-		if (verifyInput(input) == 1)
+		if (verifyInput(input) == 1) {
+			outputBuffer.pop();
 			SetEvent(events->handles[3]);
-		if (verifyInput(input) == 2)
+		}
+		if (verifyInput(input) == 2) {
+			outputBuffer.pop();
 			SetEvent(events->handles[4]);
-			//SetEvent()
+		}
+		//SetEvent()
 		break;
 
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACk either one will work
-		if (verifyInput(input))
+		if (verifyInput(input) == 0 || verifyInput(input) == 1) {
 			SetEvent(events->handles[2]);
+		}
+		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
+			std::random_device rdm;
+			std::mt19937 generator(rdm());
+			DWORD throwawayENQ = WaitForSingleObject(getEvents()->handles[2], distribution(generator));
+		}
 		break;
-
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		if (verifyInput(input))
@@ -165,13 +192,16 @@ void StateController::handleInput(char* input)
 	case RTR:
 
 		//Is it an EOT
-		if (verifyInput(input)){
+		if (verifyInput(input)) {
 			SetEvent(events->handles[7]);
-		} else {
+		}
+		else {
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
-			serv->drawStringBuffer(input);
+			//serv->drawStringBuffer(input);
+			sess->writeToFile(input);
+			SetEvent(events->handles[6]);
 		}
 		break;
 	}
@@ -179,32 +209,46 @@ void StateController::handleInput(char* input)
 
 
 int StateController::verifyInput(char* input) {
+	int i = *input;
+	int a1 = ACK1;
+	int a0 = ACK0;
+	int eot = EOT;
 	switch (state) {
 	case TX:
 		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
 		// Method with logic to handle
 		// TODO: check to make sure this is standardized
 		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
-		if (synch)
-			return strncmp(input, &ACK1, 2) ? 1 : strncmp(input, &REQ1, 2) ? 2 : 0;
+
+		if (1) {
+
+			//if (strncmp(input, &ACK1, 2) == 0)
+			//	return 1;
+			//if (strncmp(input, &REQ1, 2) == 0)
+			//	return 2;
+			return i == a1;
+		}
 		else
-			return strncmp(input, &ACK0, 2) ? 1 : strncmp(input, &REQ0, 2) ? 2 : 0;
+			return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
-		return strncmp(input, &ACK0, 2) || strncmp(input, &ACK1, 2);
+		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
+		// 0 = ack0, 1 = ack1, 2 = ENQ
+		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
+		return i == a0 || i == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return strncmp(input, &ENQ, 2) == 0;
 	case RTR:
 		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
-		return strncmp(input, &EOT, 2) == 0;
+		return i == eot;
 	}
 	return 0;
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	sendCommunicationMessage
+-- FUNCTION:	sendCommunicationMessageToCommController
 --
 -- DATE:		Nov 26, 2019
 --
@@ -219,35 +263,35 @@ int StateController::verifyInput(char* input) {
 -- RETURNS:		void
 --
 -- NOTES:
--- Call this function to write a control message to the port. 
+-- Call this function to write a control message to the port.
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendCommunicationMessage(DWORD event) {
+void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	switch (event) {
 	case 0: //IDLE_FILE_INPUT
 		if (state == IDLE) {
-			comm->writeDataToPort(&ENQ);
+			comm->writeControlMessageToPort(&ENQ);
 			setState(PREP_TX);
 		}
 		break;
 	case 5: //RTR_FILE_INPUT
 			// This is when we have a file to send Shouldn't be sending anyhting only changing our Reqs to ACKS
 		if (state == IDLE) {
-			comm->writeDataToPort(&ENQ);
+			comm->writeControlMessageToPort(&ENQ);
 			setState(PREP_TX);
 		}
 		else if (state == RX) {
-			comm->writeDataToPort(&REQ0);
+			comm->writeControlMessageToPort(&REQ0);
 		}
 		break;
 	case 1: //IDLE_RECEIVE_ENQ
 		if (outputBuffer.size() == 0) { //output buffer is empty
-			comm->writeDataToPort(&ACK0); // This should either be ACK0 or ACK1
+			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
 		}
 		break;
 	case 6: //RTR_RECEIVE_FRAME
 		//Perform CRC Validation on received data
 		if (true) { // frame is valid
-			comm->writeDataToPort(&ACK0); // This should either be ACK0 or ACK1
+			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
 		}
 		else {
 			inputBuffer = { 0 }; // Clear input buffer. Discard frame
@@ -255,7 +299,7 @@ void StateController::sendCommunicationMessage(DWORD event) {
 		break;
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS) {
-			comm->writeDataToPort(&EOT);
+			comm->writeControlMessageToPort(&EOT);
 			setState(IDLE);
 		}
 		break;

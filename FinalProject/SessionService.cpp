@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <stdlib.h>
 #include <windows.h>
@@ -270,6 +271,9 @@ DWORD SessionService::readFile(LPVOID input) {
 	}
 
 	char ReadBuffer[1017] = { 0 }; // The buffer size should be defined somewhere
+	
+	PurgeComm(hFile, PURGE_RXCLEAR);
+	SetEvent(stateController->getEvents()->handles[0]);
 
 	//It should equal the buffer size - 1 to give room for null character
 	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
@@ -278,11 +282,12 @@ DWORD SessionService::readFile(LPVOID input) {
 		}
 		// output buffer is a pointer to char *  if they all point to the same buffer can't really send anything will have to instantiate a new buffer each time 
 		
-		char *newBuffer = new char[1017];
-		strcpy(newBuffer, ReadBuffer);
-		stateController->outputBuffer.emplace(newBuffer);
+		std::string newBuffer{ ReadBuffer };
+	
+		stateController->outputBuffer.push(newBuffer);
 		
-		
+		memset(&ReadBuffer, 0, sizeof(ReadBuffer));
+
 		// Setting event to File Input 
 		// do we need to repeatedly set this over and over?
 		SetEvent(stateController->getEvents()->handles[0]);
@@ -292,3 +297,10 @@ DWORD SessionService::readFile(LPVOID input) {
 	CloseHandle(hFile);
 	return 0;
 }
+
+VOID SessionService::writeToFile(const char* data) {
+	std::fstream outputFile;
+	outputFile.open("output.txt", std::fstream::app);
+	outputFile << data;
+	outputFile.close();
+}	
