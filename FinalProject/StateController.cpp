@@ -50,11 +50,20 @@ DWORD StateController::handleProtocolWriteEvents() {
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 4500);
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
-			if (indexOfSignaledEvent == 5 || indexOfSignaledEvent == 6) {
+			if (!outputBuffer.empty() || indexOfSignaledEvent == 5) { // receive file input
+				setState(RX);
+				sendCommunicationMessageToCommController(5); // send REQ
+				setState(RTR);
+			}
+			else if (indexOfSignaledEvent == 6) { // receive frame
 				setState(RX);
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
+			}
+			else if (indexOfSignaledEvent == 7) { // receive EOT 
+				setState(IDLE);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 			}
 			else {
 				serv->drawStringBuffer("Timed out from RTR");
@@ -69,6 +78,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				// RESET BOTH FILE_INPUT_IDLE && FILE_INPUT_RTR
 				ResetEvent(getEvents()->handles[0]); // Reset to IDLE from IDLE_FILE_INPUT because finished sending
 				ResetEvent(getEvents()->handles[5]); // Reset to IDLE from RTR_FILE_INPUT because finished sending
+				ResetEvent(getEvents()->handles[7]);
 				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
 			}
@@ -81,7 +91,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, INFINITE);//1500
+					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, INFINITE); // 3000
 					//indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], INFINITE); //ACK
 					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1500); //REQ
 
@@ -172,6 +182,7 @@ void StateController::handleInput(char* input)
 			outputBuffer.pop();
 			if (releaseTX && ++reqCounter > 3) {
 				serv->drawStringBuffer("Timed out from REQ");
+				reqCounter = 0;
 				setState(IDLE);
 				releaseTX = false;
 			} 
@@ -205,6 +216,7 @@ void StateController::handleInput(char* input)
 
 		//Is it an EOT
 		if (verifyInput(input)) {
+			ResetEvent(events->handles[5]);
 			SetEvent(events->handles[7]);
 		}
 		else {
@@ -213,7 +225,7 @@ void StateController::handleInput(char* input)
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
 			//serv->drawStringBuffer(input);
 			sess->writeToFile(input);
-			SetEvent(events->handles[6]);
+			SetEvent(events->handles[6]); // Receive frame in RTR
 		}
 		break;
 	}
@@ -306,6 +318,7 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		}
 		else if (state == RX) {
 			comm->writeControlMessageToPort(&REQ0);
+			serv->drawStringBuffer("Sending REQ");
 		}
 		break;
 	case 1: //IDLE_RECEIVE_ENQ

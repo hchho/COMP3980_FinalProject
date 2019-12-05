@@ -304,8 +304,9 @@ void CommController::readHandle(DWORD bytesToReceive) {
 			stateController->handleInput(inputBuffer);
 		}
 		else {
+			//WaitForSingleObject(overlapRead.hEvent, INFINITE);
 			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-			if (bytesReceived > 2) {
+			if (bytesReceived == 1024) {
 				stateController->handleInput(inputBuffer);
 			}
 			//ClearCommError(commHandle, &lastError, NULL);
@@ -317,7 +318,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		// Handle issues with actually failing to communitcate here
 		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if (bytesReceived > 2) {
+		if (bytesReceived == 1024) {
 			stateController->handleInput(inputBuffer);
 		}
 	}
@@ -361,8 +362,10 @@ VOID CommController::initializeConnection(LPCWSTR portName) {
 		ErrorHandler::handleError(ERROR_PORT_PROP);
 		return;
 	};
+	COMMTIMEOUTS co;
+	co.ReadIntervalTimeout = 500;
 
-
+	SetCommTimeouts(commHandle, &co);
 	SetCommState(commHandle, &commConfig.dcb);
 
 	SetupComm(commHandle, sizeof(OUTPUT_BUFFER), sizeof(OUTPUT_BUFFER));
