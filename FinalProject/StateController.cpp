@@ -91,7 +91,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, INFINITE); // 3000
+					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, 1500); 
 					//indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], INFINITE); //ACK
 					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1500); //REQ
 
@@ -177,6 +177,7 @@ void StateController::handleInput(char* input)
 		if (verifyInput(input) == 1) {
 			outputBuffer.pop();
 			SetEvent(events->handles[3]);
+			break;
 		}
 		if (verifyInput(input) == 2) {
 			outputBuffer.pop();
@@ -191,7 +192,12 @@ void StateController::handleInput(char* input)
 			}
 		}
 		break;
-
+	case RTS:
+		if (verifyInput(input) == 2) {
+			outputBuffer.pop();
+			SetEvent(events->handles[3]);
+		}
+		break;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACk either one will work
@@ -247,21 +253,19 @@ int StateController::verifyInput(char* input) {
 			//	return 1;
 			//if (strncmp(input, &REQ1, 2) == 0)
 			//	return 2;
+	
+		if (i == REQ0) {
+			return 2;
+		}
+		if (i == REQ1) {
+			return 2;
+		}
 		if (i == ACK0) {
 			return 1;
 		}
 		if (i == ACK1) {
 			return 1;
-
 		}		
-		if (i == REQ0) {
-			return 2;
-
-		}		
-		if (i == REQ1) {
-			return 2;
-
-		}
 		break;
 		//}
 		//else // SYNC BITS

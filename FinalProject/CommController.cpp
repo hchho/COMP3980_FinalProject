@@ -262,6 +262,8 @@ DWORD CommController::handleRead(LPVOID input) {
 					//Or could be an EOT this is the only Staete that should handle either 1028 bytes or 2 byte response
 					readHandle(1024);
 					break;
+				default:
+					break;
 				}
 			}
 
@@ -301,6 +303,9 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
 			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
 			bytesReceived == bytesToReceive) {
+
+			if (*(inputBuffer + 1) == REQ0)
+				bytesReceived = 1;
 			stateController->handleInput(inputBuffer);
 		}
 		else {
