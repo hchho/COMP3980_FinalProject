@@ -113,10 +113,8 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
 				else if (indexOfSignaledEvent == 2) {// 2 is send EOT because of REQ 
-					setState(IDLE);
 					releaseTX = false;
 					sendCommunicationMessageToCommController(9);
-					serv->drawStringBuffer("Sending EOT Finished sending", 'n');
 					std::random_device rdm;
 					std::mt19937 generator(rdm());
 					Sleep(distribution(generator));
@@ -345,8 +343,9 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		}
 		break;
 	case 9: //RTS_DONE_SENDING 
-		if (state == RTS) {
+		if (state == RTS || state == TX) {
 			comm->writeControlMessageToPort(&EOT);
+			serv->drawStringBuffer("Sending EOT Finished sending", 'n');
 			setState(IDLE);
 		}
 		break;
