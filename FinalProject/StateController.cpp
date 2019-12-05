@@ -65,11 +65,10 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::RTS:
 			// Set the event for an empty output buffer and set the state to idle after sending an EOT
 			if (outputBuffer.empty()) {
-
 				sendCommunicationMessageToCommController(9);
 				// RESET BOTH FILE_INPUT_IDLE && FILE_INPUT_RTR
-				ResetEvent(getEvents()->handles[0]);
-				ResetEvent(getEvents()->handles[5]);
+				ResetEvent(getEvents()->handles[0]); // Reset to IDLE from IDLE_FILE_INPUT because finished sending
+				ResetEvent(getEvents()->handles[5]); // Reset to IDLE from RTR_FILE_INPUT because finished sending
 				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
 			}
@@ -174,7 +173,7 @@ void StateController::handleInput(char* input)
 			if (releaseTX && ++reqCounter > 3) {
 				serv->drawStringBuffer("Timed out from REQ");
 				setState(IDLE);
-				releaseTX = !releaseTX;
+				releaseTX = false;
 			} 
 			else {
 				SetEvent(events->handles[4]);
@@ -255,6 +254,7 @@ int StateController::verifyInput(char* input) {
 		//}
 		//else // SYNC BITS
 		//	return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
+
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
@@ -262,11 +262,9 @@ int StateController::verifyInput(char* input) {
 		// 0 = ack0, 1 = ack1, 2 = ENQ
 		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
 		return i == ACK0 || i == ACK1;
-		break;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return i == ENQ;
-		break;
 	case RTR:
 		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
 		return i == EOT;

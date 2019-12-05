@@ -26,7 +26,6 @@ private:
 	char* inputBuffer{ 0 };
 	boolean output = false;;
 	boolean releaseTX = false;
-	boolean wantsToSend = false;
 
 	Events* events;
 	SessionService* sess;

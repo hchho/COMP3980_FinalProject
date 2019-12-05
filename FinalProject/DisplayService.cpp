@@ -93,9 +93,7 @@ VOID DisplayService::drawInput(char input) {
 VOID DisplayService::drawStringBuffer(const char* readBuffer, char delimiter) {
 	char buffer[1028]{ 0 };
 	strcpy(buffer, readBuffer);
-//	for (char c : buffer) {
-//		drawInput(c);
-//	}
+	
 	xCoord = 0;
 	HDC deviceContext = GetDC(*windowHandle);// get device context	
 	TEXTMETRIC textMetric;
