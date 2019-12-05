@@ -118,14 +118,42 @@ DWORD StateController::handleProtocolWriteEvents() {
 			}
 			break;
 		case STATES::PREP_TX:
-			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
+			//Wait for either an Acknowldgement in form of Ack0 or ENQ
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1500);
+			// If timeout I've not received an Ack and I've timedout
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
 				serv->drawStringBuffer("Timed out from PREP_TX");
 				setState(IDLE);
 				break;
 			}
-			setState(RTS);
-			ResetEvent(getEvents()->handles[2]);
+			//If i don't timeout I enter this switch where either 1 of 2 events have triggered
+			
+			switch (indexOfSignaledEvent) {
+				// Case Wchich is an Ack and I have the line
+			case 2:
+				setState(RTS);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+				break;
+			// Case 11 I've Received an ENQ while in prepTX so I enter a random timeout
+			case 10:
+				setState(IDLE);
+				//Reset Handle
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+
+				std::random_device rdm;
+				std::mt19937 generator(rdm());
+				// I wait for a random timeout for // Is this distribution done correctly?
+				indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[10], distribution(generator));
+				
+				// Get an ENQ so I go to RTR, give the line away and I go to RTR and send an ACK
+				if (indexOfSignaledEvent != WAIT_TIMEOUT); {
+					setState(RTR);
+					sendCommunicationMessageToCommController(10);
+					ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+				}
+				//Time out I stay looped in IDLE and restart Protocol loop
+				break;
+			}
 			break;
 
 		default:
@@ -182,12 +210,17 @@ void StateController::handleInput(char* input)
 		break;
 
 	case PREP_TX:
-		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-		// Currently just expect an ACk either one will work
+		//Received a ENQ set Protocl thread to read for IDLE_ENQ with random timeout
+		if (verifyInput(input) == 3)
+			SetEvent(events->handles[10]);
+
+			// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
+			// Currently just expect an ACk either one will work
 		if (verifyInput(input) == 0 || verifyInput(input) == 1) {
 			SetEvent(events->handles[2]);
 		}
-		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
+
+		if(false) { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
 			std::random_device rdm;
 			std::mt19937 generator(rdm());
 			DWORD throwawayENQ = WaitForSingleObject(getEvents()->handles[2], distribution(generator));
@@ -247,6 +280,8 @@ int StateController::verifyInput(char* input) {
 		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
 		// 0 = ack0, 1 = ack1, 2 = ENQ
 		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
+		if (i == ENQ)
+			return 3;
 		return *++input == a0 || *++input == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
@@ -313,6 +348,9 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 			comm->writeControlMessageToPort(&EOT);
 			setState(IDLE);
 		}
+		break;
+	case 10:
+		comm->writeControlMessageToPort(&ACK0);
 		break;
 	default:
 		return;

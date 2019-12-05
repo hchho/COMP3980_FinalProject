@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
 
-constexpr static int EVENT_COUNTS = 10;
+constexpr static int EVENT_COUNTS = 11;
 
 struct Events {
 
@@ -10,6 +10,7 @@ struct Events {
 
 	// To set state to RTS
 	HANDLE PREP_TX = CreateEvent(NULL, FALSE, FALSE, NULL);
+	HANDLE PREP_TX_ENQ = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	HANDLE TX_RECEIVE_ACK = CreateEvent(NULL, FALSE, FALSE, NULL);
 	HANDLE TX_RECEIVE_REQ = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -31,6 +32,11 @@ struct Events {
 		RTR_RECEIVE_EOT,	//7
 		TX_EMPTY_OUTPUT,	//8
 		RTS_DONE_SENDING,	//9
+		PREP_TX_ENQ		//10
+	};
+	HANDLE prepTxHandles[2] = {
+		PREP_TX,
+		PREP_TX_ENQ
 	};
 
 	Events() {};
