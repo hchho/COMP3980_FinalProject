@@ -299,23 +299,13 @@ void CommController::readHandle(DWORD bytesToReceive) {
 	if (ReadFile(commHandle, inputBuffer, bytesToReceive, NULL, &overlapRead)) {
 		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
 		ClearCommError(this->commHandle, &lastError, NULL);
-		int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
-			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
-			bytesReceived == bytesToReceive) {
-
-			if (*(inputBuffer + 1) == REQ0)
-				bytesReceived = 1;
+		int result = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+		if ((lastError = GetLastError()) == ERROR_SUCCESS && result) {
 			stateController->handleInput(inputBuffer);
 		}
 		else {
-			int wait_err = WaitForSingleObject(overlapRead.hEvent, INFINITE);
-			if (wait_err == WAIT_OBJECT_0) {
-				GetOverlappedResult(commHandle, &overlapRead, NULL, TRUE);
-				stateController->handleInput(inputBuffer);
-			}
-			//ClearCommError(commHandle, &lastError, NULL);
-			//lastError = 0;
+			ClearCommError(commHandle, &lastError, NULL);
+			lastError = 0;
 		}
 	}
 	else {
@@ -323,7 +313,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		// Handle issues with actually failing to communitcate here
 		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if (bytesReceived == 1024) {
+		if (bytesReceived > 2) {
 			stateController->handleInput(inputBuffer);
 		}
 	}

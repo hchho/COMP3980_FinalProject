@@ -50,7 +50,11 @@ DWORD StateController::handleProtocolWriteEvents() {
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 4500);
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
-			if (!outputBuffer.empty() || indexOfSignaledEvent == 5) { // receive file input
+			if (indexOfSignaledEvent == 7) { // receive EOT 
+				setState(IDLE);
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+			}
+			else if (!outputBuffer.empty() || indexOfSignaledEvent == 5) { // receive file input
 				setState(RX);
 				sendCommunicationMessageToCommController(5); // send REQ
 				setState(RTR);
@@ -60,10 +64,6 @@ DWORD StateController::handleProtocolWriteEvents() {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
-			}
-			else if (indexOfSignaledEvent == 7) { // receive EOT 
-				setState(IDLE);
-				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 			}
 			else {
 				serv->drawStringBuffer("Timed out from RTR", 'n');
