@@ -79,7 +79,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				ResetEvent(getEvents()->handles[0]); // Reset to IDLE from IDLE_FILE_INPUT because finished sending
 				ResetEvent(getEvents()->handles[5]); // Reset to IDLE from RTR_FILE_INPUT because finished sending
 				ResetEvent(getEvents()->handles[7]);
-				DisplayService::displayMessageBox("Sending EOT Finished sending");
+				DisplayService::displayMessageBox("RTS Sending EOT Finished sending");
 				setState(IDLE);
 			}
 			else {
@@ -345,7 +345,7 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS || state == TX) {
 			comm->writeControlMessageToPort(&EOT);
-			serv->drawStringBuffer("Sending EOT Finished sending", 'n');
+			serv->drawStringBuffer("RTS Done Sending Sending EOT Finished sending", 'n');
 			setState(IDLE);
 		}
 		break;
