@@ -66,7 +66,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 			}
 			else {
-				serv->drawStringBuffer("Timed out from RTR");
+				serv->drawStringBuffer("Timed out from RTR", 'n');
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
@@ -91,14 +91,12 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, 1500); 
-					//indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], INFINITE); //ACK
-					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1500); //REQ
+					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, 1500);
 
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) { // We received ACK or REQ
 						break;
 					}
-					serv->drawStringBuffer("Resent a frame\n");
+					serv->drawStringBuffer("Resent a frame", 'n');
 					setState(RTS); // following protocol, need to set back to RTS
 				}
 				// Received an ack
@@ -114,9 +112,19 @@ DWORD StateController::handleProtocolWriteEvents() {
 					continue;
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
+				else if (indexOfSignaledEvent == 2) {// 2 is send EOT because of REQ 
+					setState(IDLE);
+					releaseTX = false;
+					sendCommunicationMessageToCommController(9);
+					serv->drawStringBuffer("Sending EOT Finished sending", 'n');
+					std::random_device rdm;
+					std::mt19937 generator(rdm());
+					Sleep(distribution(generator));
+					break;
+				}
 
 				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
-					serv->drawStringBuffer("Timed out from RTS\n");
+					serv->drawStringBuffer("Timed out from RTS", 'n');
 					setState(IDLE);
 				}
 			}
@@ -124,14 +132,13 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::PREP_TX:
 			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], 1500);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
-				serv->drawStringBuffer("Timed out from PREP_TX");
+				serv->drawStringBuffer("Timed out from PREP_TX", 'n');
 				setState(IDLE);
 				break;
 			}
 			setState(RTS);
 			ResetEvent(getEvents()->handles[2]);
 			break;
-
 		default:
 			break;
 		}
@@ -182,14 +189,12 @@ void StateController::handleInput(char* input)
 		if (verifyInput(input) == 2) {
 			outputBuffer.pop();
 			if (releaseTX && ++reqCounter > 3) {
-				serv->drawStringBuffer("Timed out from REQ");
+				serv->drawStringBuffer("Switching out from REQ", 'n');
 				reqCounter = 0;
-				setState(IDLE);
-				releaseTX = false;
+				SetEvent(events->handles[9]);
+				break;
 			} 
-			else {
-				SetEvent(events->handles[4]);
-			}
+			SetEvent(events->handles[4]);
 		}
 		break;
 	case RTS:
@@ -207,7 +212,7 @@ void StateController::handleInput(char* input)
 		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
 			std::random_device rdm;
 			std::mt19937 generator(rdm());
-			serv->drawStringBuffer("Timed out from simultaneous bidding.");
+			serv->drawStringBuffer("Timed out from simultaneous bidding.", 'n');
 			DWORD throwawayENQ = WaitForSingleObject(getEvents()->handles[2], distribution(generator));
 			setState(IDLE);
 		}
@@ -322,7 +327,7 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		}
 		else if (state == RX) {
 			comm->writeControlMessageToPort(&REQ0);
-			serv->drawStringBuffer("Sending REQ");
+			serv->drawStringBuffer("Sending REQ", 'n');
 		}
 		break;
 	case 1: //IDLE_RECEIVE_ENQ
