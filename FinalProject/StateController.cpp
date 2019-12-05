@@ -47,7 +47,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 3000);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 5) {
@@ -63,6 +63,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				setState(RTR);
 			}
 			else {
+				serv->drawStringBuffer("Timed out from RTR");
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
@@ -109,6 +110,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 
 
 				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
+					serv->drawStringBuffer("Timed out from RTS");
 					sendCommunicationMessageToCommController(9);
 					DisplayService::displayMessageBox("Sending EOT Finished sending");
 					setState(IDLE);
@@ -118,6 +120,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::PREP_TX:
 			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
+				serv->drawStringBuffer("Timed out from PREP_TX");
 				setState(IDLE);
 				break;
 			}
@@ -234,7 +237,7 @@ int StateController::verifyInput(char* input) {
 			//	return 1;
 			//if (strncmp(input, &REQ1, 2) == 0)
 			//	return 2;
-			return i == a1;
+			return *++input == a1;
 		}
 		else
 			return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
@@ -244,13 +247,13 @@ int StateController::verifyInput(char* input) {
 		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
 		// 0 = ack0, 1 = ack1, 2 = ENQ
 		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
-		return i == a0 || i == a1;
+		return *++input == a0 || *++input == a1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return i == ENQ;
 	case RTR:
 		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
-		return i == eot;
+		return *++input == eot;
 	}
 	return 0;
 }
