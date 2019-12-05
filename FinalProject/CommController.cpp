@@ -358,6 +358,10 @@ VOID CommController::initializeConnection(LPCWSTR portName) {
 		return;
 	};
 
+	COMMTIMEOUTS to;
+	to.ReadIntervalTimeout = 500;
+
+	SetCommTimeouts(commHandle, &to);
 	SetCommState(commHandle, &commConfig.dcb);
 
 	SetupComm(commHandle, sizeof(OUTPUT_BUFFER), sizeof(OUTPUT_BUFFER));

@@ -48,21 +48,21 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 4500);
-			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
-			// If it's an event we can't should be 
 			if (indexOfSignaledEvent == 7) { // receive EOT 
 				setState(IDLE);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 			}
-			else if (!outputBuffer.empty() || indexOfSignaledEvent == 5) { // receive file input
+			else if (indexOfSignaledEvent == 5) { // receive file input
 				setState(RX);
 				sendCommunicationMessageToCommController(5); // send REQ
+				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
 			}
 			else if (indexOfSignaledEvent == 6) { // receive frame
 				setState(RX);
-				sendCommunicationMessageToCommController(indexOfSignaledEvent);
-				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
+				int indexToSend = outputBuffer.empty() ? 6 : 5; // If the output buffer is emtpy, we send an ACK, otherwise, we send a REQ
+				sendCommunicationMessageToCommController(indexToSend); 
+				ResetEvent(getEvents()->handles[indexToSend]);
 				setState(RTR);
 			}
 			else {
