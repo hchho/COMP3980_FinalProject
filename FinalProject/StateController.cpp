@@ -80,11 +80,11 @@ DWORD StateController::handleProtocolWriteEvents() {
 				int errorCounter = 0;
 				int resentCounter = 0;
 				// Error Repeadtely sends 3 frames or else breaks
-				while (true) {
+				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], 1000); //ACK
+					indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], 1500); //ACK
 					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1000); //REQ
 
 					//indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);

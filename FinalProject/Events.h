@@ -30,7 +30,7 @@ struct Events {
 		RTR_RECEIVE_FRAME,	//6
 		RTR_RECEIVE_EOT,	//7
 		TX_EMPTY_OUTPUT,	//8
-		RTS_DONE_SENDING, //9
+		RTS_DONE_SENDING,	//9
 	};
 
 	Events() {};

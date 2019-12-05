@@ -5,8 +5,8 @@
 
 constexpr const char _NUL = 0x00;
 constexpr const  char ENQ = 5;
-constexpr const  char ACK0 = 0x0006;
-constexpr const  char ACK1 = 0xFF06;
+constexpr const  char ACK0 = 6;
+constexpr const  char ACK1 = 6;
 constexpr const  char REQ0 = 0x0011;
 constexpr const  char REQ1 = 0xFF11;
 constexpr const  char EOT = 0x04;
