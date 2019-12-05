@@ -296,7 +296,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 
 	// ReadFile
 	// Possible issues if we are in a mode expecting control but receive a data frame? PurgeComm() to clear buffer?
-	if (ReadFile(commHandle, inputBuffer, bytesToReceive, &bytesReceived, &overlapRead)) {
+	if (ReadFile(commHandle, inputBuffer, bytesToReceive, NULL, &overlapRead)) {
 		//ERROR_IO_PENGING designates if read operation is pending completeion asynchronously
 		ClearCommError(this->commHandle, &lastError, NULL);
 		int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
@@ -309,9 +309,9 @@ void CommController::readHandle(DWORD bytesToReceive) {
 			stateController->handleInput(inputBuffer);
 		}
 		else {
-			//WaitForSingleObject(overlapRead.hEvent, INFINITE);
-			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-			if (bytesReceived == 1024) {
+			int wait_err = WaitForSingleObject(overlapRead.hEvent, INFINITE);
+			if (wait_err == WAIT_OBJECT_0) {
+				GetOverlappedResult(commHandle, &overlapRead, NULL, TRUE);
 				stateController->handleInput(inputBuffer);
 			}
 			//ClearCommError(commHandle, &lastError, NULL);
@@ -367,10 +367,7 @@ VOID CommController::initializeConnection(LPCWSTR portName) {
 		ErrorHandler::handleError(ERROR_PORT_PROP);
 		return;
 	};
-	COMMTIMEOUTS co;
-	co.ReadIntervalTimeout = 500;
 
-	SetCommTimeouts(commHandle, &co);
 	SetCommState(commHandle, &commConfig.dcb);
 
 	SetupComm(commHandle, sizeof(OUTPUT_BUFFER), sizeof(OUTPUT_BUFFER));
