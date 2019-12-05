@@ -93,22 +93,22 @@ VOID DisplayService::drawInput(char input) {
 VOID DisplayService::drawStringBuffer(const char* readBuffer, char delimiter) {
 	char buffer[1028]{ 0 };
 	strcpy(buffer, readBuffer);
-	for (char c : buffer) {
-		drawInput(c);
-	}
-//	xCoord = 0;
-//	HDC deviceContext = GetDC(*windowHandle);// get device context	
-//	TEXTMETRIC textMetric;
-//	GetTextMetrics(deviceContext, &textMetric);
-//	TextOut(deviceContext, textMetric.tmMaxCharWidth * xCoord, yCoord, utils::strToLPCWSTR(buffer), strlen(buffer)); // output string of characters
-//
-//	if (delimiter == 'n') {
-//		// Resets cursor
-//		yCoord = yCoord + textMetric.tmHeight + textMetric.tmExternalLeading;
+//	for (char c : buffer) {
+//		drawInput(c);
 //	}
-//	xCoord = 0;
-//
-//	ReleaseDC(*windowHandle, deviceContext); // Release device context
+	xCoord = 0;
+	HDC deviceContext = GetDC(*windowHandle);// get device context	
+	TEXTMETRIC textMetric;
+	GetTextMetrics(deviceContext, &textMetric);
+	TextOut(deviceContext, textMetric.tmMaxCharWidth * xCoord, yCoord, utils::strToLPCWSTR(buffer), strlen(buffer)); // output string of characters
+
+	if (delimiter == 'n') {
+		// Resets cursor
+		yCoord = yCoord + textMetric.tmHeight + textMetric.tmExternalLeading;
+	}
+	xCoord = 0;
+
+	ReleaseDC(*windowHandle, deviceContext); // Release device context
 }
 
 /*------------------------------------------------------------------------------------------------------------------

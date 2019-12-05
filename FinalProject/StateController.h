@@ -22,17 +22,18 @@ private:
 	int synch;
 	int errorCount = 0;
 	int resentCounter = 0;
+	int reqCounter = 0;
 	char* inputBuffer{ 0 };
-	//char** outputBuffer;
 	boolean output = false;;
 	boolean releaseTX = false;
-	Events* events;
+	boolean wantsToSend = false;
 
+	Events* events;
 	SessionService* sess;
 	CommController* comm;
 	DisplayService* serv;
 	StateControllerHelper* sHelper;
-	std::uniform_int_distribution<int> distribution{ 0, 1000 };
+	std::uniform_int_distribution<int> distribution{ 0, 1500 };
 
 	// Handles data frame when in data read state and 
 	void parseDataFrame(char* frame);

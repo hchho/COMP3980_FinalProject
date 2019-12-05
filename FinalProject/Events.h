@@ -2,6 +2,7 @@
 #include <Windows.h>
 
 constexpr static int EVENT_COUNTS = 10;
+constexpr static int ACKNOWLEDGEMENT_HANDLES_COUNT = 2;
 
 struct Events {
 
@@ -31,6 +32,11 @@ struct Events {
 		RTR_RECEIVE_EOT,	//7
 		TX_EMPTY_OUTPUT,	//8
 		RTS_DONE_SENDING,	//9
+	};
+
+	HANDLE acknowledgementHandles[ACKNOWLEDGEMENT_HANDLES_COUNT] = {
+		TX_RECEIVE_ACK,		//0
+		TX_RECEIVE_REQ,		//1
 	};
 
 	Events() {};

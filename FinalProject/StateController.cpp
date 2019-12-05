@@ -47,16 +47,10 @@ DWORD StateController::handleProtocolWriteEvents() {
 			break;
 		case STATES::RTR:
 			// Three possible handles to be signaled: RTR_FILE_INPUT, RTR_RECEIVE_FRAME, RTR_RECEIVE_EOT
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 4500);
 			// I feel like this should be a bool here to send an REQ instead of an ACK when signalling the fact that we have something in our output buffer
 			// If it's an event we can't should be 
-			if (indexOfSignaledEvent == 5) {
-				setState(RX);
-				sendCommunicationMessageToCommController(indexOfSignaledEvent);
-				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				setState(RTR);
-			}
-			else if (indexOfSignaledEvent == 6) {
+			if (indexOfSignaledEvent == 5 || indexOfSignaledEvent == 6) {
 				setState(RX);
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
@@ -73,6 +67,9 @@ DWORD StateController::handleProtocolWriteEvents() {
 			if (outputBuffer.empty()) {
 
 				sendCommunicationMessageToCommController(9);
+				// RESET BOTH FILE_INPUT_IDLE && FILE_INPUT_RTR
+				ResetEvent(getEvents()->handles[0]);
+				ResetEvent(getEvents()->handles[5]);
 				DisplayService::displayMessageBox("Sending EOT Finished sending");
 				setState(IDLE);
 			}
@@ -85,40 +82,38 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
 					sendFrameToCommController(outputBuffer.front());
 					setState(TX);
-					indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], 1500); //ACK
-					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1000); //REQ
+					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, INFINITE);//1500
+					//indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[3], INFINITE); //ACK
+					//indexOfSignaledEvent2 = WaitForSingleObject(getEvents()->handles[4], 1500); //REQ
 
-					//indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) { // We received ACK or REQ
 						break;
 					}
+					serv->drawStringBuffer("Resent a frame\n");
 					setState(RTS); // following protocol, need to set back to RTS
 				}
 				// Received an ack
-				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
-				if (indexOfSignaledEvent == 0) {
+				ResetEvent(getEvents()->acknowledgementHandles[indexOfSignaledEvent]);
+				if (indexOfSignaledEvent == 0) { // 0 is ACK
 					setState(RTS);
 					continue;
 				}
 				//Received an Req
-				else if (indexOfSignaledEvent == 4) {
+				else if (indexOfSignaledEvent == 1) { // 1 is REQ
 					setState(RTS);
-					releaseTX = !releaseTX;
-					break;
+					releaseTX = true;
+					continue;
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
 
-
 				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
-					serv->drawStringBuffer("Timed out from RTS");
-					sendCommunicationMessageToCommController(9);
-					DisplayService::displayMessageBox("Sending EOT Finished sending");
+					serv->drawStringBuffer("Timed out from RTS\n");
 					setState(IDLE);
 				}
 			}
 			break;
 		case STATES::PREP_TX:
-			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], INFINITE);
+			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], 1500);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
 				serv->drawStringBuffer("Timed out from PREP_TX");
 				setState(IDLE);
@@ -176,9 +171,15 @@ void StateController::handleInput(char* input)
 		}
 		if (verifyInput(input) == 2) {
 			outputBuffer.pop();
-			SetEvent(events->handles[4]);
+			if (releaseTX && ++reqCounter > 3) {
+				serv->drawStringBuffer("Timed out from REQ");
+				setState(IDLE);
+				releaseTX = !releaseTX;
+			} 
+			else {
+				SetEvent(events->handles[4]);
+			}
 		}
-		//SetEvent()
 		break;
 
 	case PREP_TX:
@@ -190,7 +191,9 @@ void StateController::handleInput(char* input)
 		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
 			std::random_device rdm;
 			std::mt19937 generator(rdm());
+			serv->drawStringBuffer("Timed out from simultaneous bidding.");
 			DWORD throwawayENQ = WaitForSingleObject(getEvents()->handles[2], distribution(generator));
+			setState(IDLE);
 		}
 		break;
 	case IDLE:
@@ -220,10 +223,6 @@ void StateController::handleInput(char* input)
 
 int StateController::verifyInput(char* input) {
 	int i = *(input + 1);
-	int a1 = ACK1;
-	int a0 = ACK0;
-	int number;
-	int eot = EOT;
 	switch (state) {
 	case TX:
 		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
@@ -231,29 +230,46 @@ int StateController::verifyInput(char* input) {
 		// TODO: check to make sure this is standardized
 		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
 
-		if (1) {
+		//if (1) {
 
 			//if (strncmp(input, &ACK1, 2) == 0)
 			//	return 1;
 			//if (strncmp(input, &REQ1, 2) == 0)
 			//	return 2;
-			return *++input == a1;
+		if (i == ACK0) {
+			return 1;
 		}
-		else
-			return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
+		if (i == ACK1) {
+			return 1;
+
+		}		
+		if (i == REQ0) {
+			return 2;
+
+		}		
+		if (i == REQ1) {
+			return 2;
+
+		}
+		break;
+		//}
+		//else // SYNC BITS
+		//	return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
 		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
 		// 0 = ack0, 1 = ack1, 2 = ENQ
 		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
-		return *++input == a0 || *++input == a1;
+		return i == ACK0 || i == ACK1;
+		break;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return i == ENQ;
+		break;
 	case RTR:
 		//returns true if EOT is seen false else Flase? what if it's not an eot and an  or any other control code
-		return *++input == eot;
+		return i == EOT;
 	}
 	return 0;
 }
