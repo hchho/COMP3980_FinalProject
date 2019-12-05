@@ -301,21 +301,12 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		ClearCommError(this->commHandle, &lastError, NULL);
 		int a = GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
 		if ((lastError = GetLastError()) == ERROR_SUCCESS &&
-			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE) &&
-			bytesReceived == bytesToReceive) {
-
-			if (*(inputBuffer + 1) == REQ0)
-				bytesReceived = 1;
+			GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE)) {
 			stateController->handleInput(inputBuffer);
 		}
 		else {
-			int wait_err = WaitForSingleObject(overlapRead.hEvent, INFINITE);
-			if (wait_err == WAIT_OBJECT_0) {
-				GetOverlappedResult(commHandle, &overlapRead, NULL, TRUE);
-				stateController->handleInput(inputBuffer);
-			}
-			//ClearCommError(commHandle, &lastError, NULL);
-			//lastError = 0;
+			ClearCommError(commHandle, &lastError, NULL);
+			lastError = 0;
 		}
 	}
 	else {
