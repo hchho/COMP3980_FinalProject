@@ -6,7 +6,7 @@
 #include <string>
 #include <windows.h>
 
-//#include "boost/boost/crc.hpp"
+#include "boost/boost/crc.hpp"
 #include "error_codes.h"
 #include "DisplayService.h"
 #include "ControlCodes.h"
