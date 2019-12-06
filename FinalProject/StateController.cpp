@@ -31,18 +31,28 @@ DWORD StateController::handleProtocolWriteEvents() {
 		switch (getState()) {
 		case STATES::IDLE:
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
-			if (indexOfSignaledEvent == 0) {
+		
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
+			// Receive File input
+			if(indexOfSignaledEvent == 0) {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				// Wait for ACK0/ACK1/ENQ from reading side to be signalled for timeout -- StateController 170
 			}
-			else {
+			// Receive and ENQ
+			else if(indexOfSignaledEvent == 1){
 				setState(PREP_RX);
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
+			} 
+			else if (!outputBuffer.empty()) {
+				serv->drawStringBuffer("Setting Enq", 'n');
+				sendCommunicationMessageToCommController(0);
+				setState(PREP_TX);
+				ResetEvent(getEvents()->handles[0]);
+				break;
 			}
 			break;
 		case STATES::RTR:
@@ -115,9 +125,9 @@ DWORD StateController::handleProtocolWriteEvents() {
 				else if (indexOfSignaledEvent == 2) {// 2 is send EOT because of REQ 
 					releaseTX = false;
 					sendCommunicationMessageToCommController(9);
-					std::random_device rdm;
-					std::mt19937 generator(rdm());
-					Sleep(distribution(generator));
+					//std::random_device rdm;
+					//std::mt19937 generator(rdm());
+					//Sleep(distribution(generator));
 					break;
 				}
 
@@ -186,7 +196,8 @@ void StateController::handleInput(char* input)
 		}
 		if (verifyInput(input) == 2) {
 			outputBuffer.pop();
-			if (releaseTX && ++reqCounter > 3) {
+			serv->drawStringBuffer("Receiving Reqs", 'n');
+			if (++reqCounter > 3 && releaseTX) {
 				serv->drawStringBuffer("Switching out from REQ", 'n');
 				reqCounter = 0;
 				SetEvent(events->handles[9]);
@@ -196,10 +207,7 @@ void StateController::handleInput(char* input)
 		}
 		break;
 	case RTS:
-		if (verifyInput(input) == 2) {
-			outputBuffer.pop();
-			SetEvent(events->handles[3]);
-		}
+		serv->drawStringBuffer("Receiving input in RTS ERROR", 'n');
 		break;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
@@ -344,7 +352,12 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		break;
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS || state == TX) {
-			comm->writeControlMessageToPort(&EOT);
+			std::string code;
+			
+			for (int i = 0; code.size() < 1024; ++i)
+				code += EOT;
+
+			comm->writeFrameToPort(code);
 			serv->drawStringBuffer("RTS Done Sending Sending EOT Finished sending", 'n');
 			setState(IDLE);
 		}

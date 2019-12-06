@@ -313,6 +313,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		// Handle issues with actually failing to communitcate here
 		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
+		// Has to stay greater than 2 to receive EOT
 		if (bytesReceived > 2) {
 			stateController->handleInput(inputBuffer);
 		}
