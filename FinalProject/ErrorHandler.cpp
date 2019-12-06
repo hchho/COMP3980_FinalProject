@@ -45,12 +45,11 @@ int checkSumCalculator(char* content) {
 	// Standard idiom for calculating a CRC-32 checksum using the boost library
 
 	// UNCOMMENT AFTER ADDING LIBRARY
-	//boost::crc_32_type crc_result;
-	//crc_result.process_bytes(s.data(), s.length());
-	//const int checksum = crc_result.checksum();
+	boost::crc_32_type crc_result;
+	crc_result.process_bytes(s.data(), s.length());
+	const int checksum = crc_result.checksum();
 
-	//return checksum;
-	return 0;
+	return checksum;
 }
 
 /*------------------------------------------------------------------------------------------------------------------

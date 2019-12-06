@@ -192,7 +192,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 					sendCommunicationMessageToCommController(9);
 					std::random_device rdm;
 					std::mt19937 generator(rdm());
-					Sleep(distribution(generator) + 1000);
+					Sleep(distribution(generator));
 					break;
 				}
 
@@ -441,7 +441,7 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 				code += EOT;
 			}
 			comm->writeFrameToPort(code);
-			serv->drawStringBuffer("RTS Done Sending Sending EOT Finished sending", 'n');
+			serv->drawStringBuffer("RTS Done Sending. Sending EOT Finished sending", 'n');
 			setState(IDLE);
 		}
 		break;

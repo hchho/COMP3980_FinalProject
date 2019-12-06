@@ -26,7 +26,7 @@ private:
 	char* inputBuffer{ 0 };
 	boolean output = false;;
 	boolean releaseTX = false;
-	std::uniform_int_distribution<int> distribution{ 0, 1500 };
+	std::uniform_int_distribution<int> distribution{ 1500, 2500 };
 
 	Events* events;
 	SessionService* sess;
