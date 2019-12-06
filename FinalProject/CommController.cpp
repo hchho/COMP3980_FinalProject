@@ -137,11 +137,11 @@ VOID CommController::writeFrameToPort(std::string &frame)
 	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
-VOID CommController::writeControlMessageToPort(const char* controlMessage)
+VOID CommController::writeControlMessageToPort(char mostSignificantByte, const char* controlMessage)
 {
 	int error;
 	std::string test;
-	test.push_back(_NUL);
+	test.push_back(mostSignificantByte);
 	test.push_back(*controlMessage);
 	LPCSTR pointerToMessageStart = nullptr;
 	pointerToMessageStart = &test[0];

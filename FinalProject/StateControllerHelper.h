@@ -9,8 +9,9 @@ public:
 
 	std::string buildCRCString(int crc_value);
 	std::string getFrameContent(char* frame);
-	std::string buildFrame(std::string data);
+	std::string buildFrame(std::string data, int syncBit);
 	void appendDataWithNullChars(std::string& data);
+	void unpackFrame(char* frame);
 };
 
 #endif

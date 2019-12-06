@@ -102,7 +102,7 @@ public:
 	VOID drawBufferToWindow(const char* input, char delimiter);
 	void setStateController(StateController* stateController) { this->stateController = stateController;};
 
-	VOID writeControlMessageToPort(const char* frame);
+	VOID writeControlMessageToPort(char msb, const char* frame);
 	VOID writeFrameToPort(std::string &frame);
 
 	// Below are inline functions for this class

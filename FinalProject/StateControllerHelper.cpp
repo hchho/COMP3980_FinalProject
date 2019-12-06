@@ -53,10 +53,16 @@
 -- Call this function to take the string stored in the output buffer and convert it a frame as defined by our protocol.
 -- Prepends SYN and STX characters to the data. Appends a 4-byte CRC value and a EOF character to the data.
 ----------------------------------------------------------------------------------------------------------------------*/
-std::string StateControllerHelper::buildFrame(std::string data) {
+std::string StateControllerHelper::buildFrame(std::string data, int syncBit) {
 	std::string frame;
 	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
-	frame.push_back(SYN);
+	if (syncBit == 0) {
+		frame.push_back(SYN0);
+	}
+	else {
+		frame.push_back(SYN1);
+	}
+
 	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
 	frame.push_back(STX);
 	// --------------- COPY DATA FROM POSITIONS 2 - 1018 ------------------
@@ -126,13 +132,13 @@ void StateControllerHelper::appendDataWithNullChars(std::string& data) {
 -- PROGRAMMER:	Chirag Fernandez
 --
 -- INTERFACE:	buildCRCString(int crc_value)
---						int crc_value - integer value of the crc that is calculated from the 1017 bytes of data in the 
+--						int crc_value - integer value of the crc that is calculated from the 1017 bytes of data in the
 --											in the current frame
 --
 -- RETURNS:		std::string
 --
 -- NOTES:
--- Call this function to combine the current string with the gnerated CRC value from the boost library. Returns a 
+-- Call this function to combine the current string with the gnerated CRC value from the boost library. Returns a
 -- new string containing the current state of the frame with the CRC value (1022 bytes).
 ----------------------------------------------------------------------------------------------------------------------*/
 std::string StateControllerHelper::buildCRCString(int crc_value)
@@ -162,6 +168,10 @@ std::string StateControllerHelper::buildCRCString(int crc_value)
 	return result;
 }
 
+
+void StateControllerHelper::unpackFrame(char* frame) {
+
+}
 //std::string StateControllerHelper::getFrameContent(char* frame)
 //{
 //}
