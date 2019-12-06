@@ -322,7 +322,7 @@ void StateController::handleInput(char* input)
 --
 -- DESIGNER:	Albert Liu
 --
--- PROGRAMMER:	Albert Liu, Henry Ho
+-- PROGRAMMER:	Albert Liu, Henry Ho, Michael Yu
 --
 -- INTERFACE:	int StateController::verifyInput(char* input)
 --					char* input - represents the value of the control code character that is received by the system
