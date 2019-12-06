@@ -316,8 +316,9 @@ void StateController::handleInput(char* input)
 			SetEvent(events->handles[7]);
 		}
 		else {
-			if (ErrorHandler::checksumMatch(input)) {
-				sess->writeToFile(input);
+			std::string content(input,1024);
+			if (ErrorHandler::checksumMatch(content)) {
+				sess->writeToFile(content);
 				SetEvent(events->handles[6]); // Receive frame in RTR
 			}
 		}

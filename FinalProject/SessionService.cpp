@@ -346,7 +346,7 @@ DWORD SessionService::readFile(LPVOID input) {
 -- Calling this function will write the characters stored within the buffer to the desginated output file in append mode.
 --
 ----------------------------------------------------------------------------------------------------------------------*/
-VOID SessionService::writeToFile(const char* data) {
+VOID SessionService::writeToFile(std::string data) {
 	std::fstream outputFile;
 	outputFile.open("output.txt", std::fstream::app);
 	outputFile << data;

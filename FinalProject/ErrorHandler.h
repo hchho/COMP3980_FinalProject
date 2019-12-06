@@ -145,11 +145,11 @@ struct ErrorHandler {
 	----------------------------------------------------------------------------------------------------------------------*/
 	static bool checksumMatch(std::string content) {
 
-		std::string contentToCheck = content.substr(0, 1018); // This substrings the entire frame minus the checksum and EOT
-		const int checkSumForReceivedFrame = checkSumCalculator(contentToCheck);
+		std::string contentToCheck = content.substr(0, 1019); // This substrings the entire frame minus the checksum and EOT
+		const unsigned int checkSumForReceivedFrame = checkSumCalculator(contentToCheck);
 		
-		std::string receivedChecksum = content.substr(1019, 1023); // Minus EOT, last four bytes
-		const int convertedReceivedChecksum = hex_to_int(receivedChecksum);
+		std::string receivedChecksum = content.substr(1019, 4); // Minus EOT, last four bytes
+		const unsigned int convertedReceivedChecksum = char_to_int(receivedChecksum);
 
 		return checkSumForReceivedFrame == convertedReceivedChecksum;
 	}
@@ -174,9 +174,28 @@ struct ErrorHandler {
 		return crcArr;
 	}
 
-	static int hex_to_int(std::string hexString)
+	/*
+	This gets four bytes from the datagram and converts it to the int
+	*/
+	static unsigned int char_to_int(std::string charArr) {
+		// Get each char and translate them to a corresponding hex value
+		// Parse combine the string hex into one large string
+		// Convert string hex into an unsigned int
+		// return value
+
+		std::string hexString;
+		std::stringstream stream;
+		for (int i = 0; i < 4; i++) {
+			stream << std::hex << (unsigned int)(unsigned char)charArr[i];
+		}
+		hexString += stream.str();
+
+		return hex_to_int(hexString);
+	}
+
+	static unsigned int hex_to_int(std::string hexString)
 	{
-		int x;
+		unsigned int x;
 
 		std::stringstream ss;
 		ss << std::hex << hexString;

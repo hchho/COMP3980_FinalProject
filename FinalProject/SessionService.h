@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <string>
 #include "modes.h"
 #include "DisplayService.h"
 #include "Events.h"
@@ -61,7 +62,7 @@ public:
 
 	VOID setStateController(StateController* stateController) { this->stateController = stateController; };
 	// NEED TO INITIALIZE THESE TWO THREADS SOMEWHERE
-	VOID writeToFile(const char*);
+	VOID writeToFile(std::string data);
 
 	HANDLE writeThread;
 	//writeThread = CreateThread(NULL, 0, handleWrite, nullptr, 0, &writeThreadId);
