@@ -112,13 +112,6 @@ DWORD StateController::handleProtocolWriteEvents() {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
-			} 
-			else if (!outputBuffer.empty()) {
-				serv->drawStringBuffer("Setting Enq", 'n');
-				sendCommunicationMessageToCommController(0);
-				setState(PREP_TX);
-				ResetEvent(getEvents()->handles[0]);
-				break;
 			}
 			else if (!outputBuffer.empty()) {
 				serv->drawStringBuffer("Bidding for channel and output buffer not empty", 'n');
