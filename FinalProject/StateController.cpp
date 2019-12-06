@@ -3,6 +3,7 @@
 #include "CommController.h"
 #include "SessionService.h"
 #include "StateControllerHelper.h"
+#include "Statistics.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		StateController.cpp - A controller class that handles all the states in our system related to the data-link 
@@ -408,6 +409,7 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	case 0: //IDLE_FILE_INPUT
 		if (state == IDLE) {
 			comm->writeControlMessageToPort(&ENQ);
+			
 			setState(PREP_TX);
 		}
 		break;
