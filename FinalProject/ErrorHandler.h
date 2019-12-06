@@ -1,10 +1,15 @@
 #pragma once
 
+#include <iomanip>
+#include <numeric>
+#include <sstream>
+#include <string>
 #include <windows.h>
+
+#include "boost/boost/crc.hpp"
 #include "error_codes.h"
 #include "DisplayService.h"
 #include "ControlCodes.h"
-#include <string>
 
 /*------------------------------------------------------------------------------------------------------------------
 -- HEADER FILE:		ErrorHandler.h - A struct that handles error codes and displays an error message
@@ -28,11 +33,6 @@
 -- to handle any error and use DisplayService to display to the user.
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
-
-	int checkSumCalculator(char* content);
-	bool checksumMatch(char* content);
-	std::string int_to_hex(int my_integer);
-	int hex_to_int(char hexArray[]);
 
 	/*------------------------------------------------------------------------------------------------------------------
 	-- FUNCTION:	handleErrorCode
@@ -77,6 +77,7 @@ struct ErrorHandler {
 			break;
 		}
 	}
+
 	/*
 	Verifies Commands code
 	Can rework to passs in state and then use a switch to verify if strcmp is taking too long
@@ -88,6 +89,100 @@ struct ErrorHandler {
 
 	static BOOL verifyCommand(const char* input) {
 		return false;
+	}
+
+	/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	checkSumCalculator
+--
+-- DATE:		Nov 27, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Chirag Fernandez
+--
+-- PROGRAMMER:	Chirag Fernandez
+--
+-- INTERFACE:	int checkSumCalculator(char* content, char* header)
+--					char* content:	a char pointer to the the data word extracted from a received frame.
+--
+--
+-- RETURNS:		int
+--
+-- NOTES:
+-- Call this function to calculate the checksum for a given dataword in char array format.
+----------------------------------------------------------------------------------------------------------------------*/
+	static int checkSumCalculator(std::string content) {
+
+		// Standard idiom for calculating a CRC-32 checksum using the boost library
+
+		// UNCOMMENT AFTER ADDING LIBRARY
+		boost::crc_32_type crc_result;
+		crc_result.process_bytes(content.data(), content.length() - 6); // Check 0-1018 bytes
+		const unsigned int checksum = crc_result.checksum();
+
+		return checksum;
+	}
+
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	checksumMatch
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Chirag Fernandez
+	--
+	-- PROGRAMMER:	Chirag Fernandez
+	--
+	-- INTERFACE:	bool checksumMatch(int checksum, char* header)
+	--					int checksum:	a base ten integer representing a checksum.
+	--					char* header:	a char pointer to the check sequence extracted from a received frame.
+	--
+	-- RETURNS:		void
+	--
+	-- NOTES:
+	-- Call this function when you want to evaluate if two checksums/check sequences are equivalent.
+	----------------------------------------------------------------------------------------------------------------------*/
+	static bool checksumMatch(std::string content) {
+
+		std::string contentToCheck = content.substr(0, 1018); // This substrings the entire frame minus the checksum and EOT
+		const int checkSumForReceivedFrame = checkSumCalculator(contentToCheck);
+		
+		std::string receivedChecksum = content.substr(1019, 1023); // Minus EOT, last four bytes
+		const int convertedReceivedChecksum = hex_to_int(receivedChecksum);
+
+		return checkSumForReceivedFrame == convertedReceivedChecksum;
+	}
+
+	static std::string getHexCRC(int decCRC)
+	{
+		char crcArr[5];
+
+		std::stringstream stream;
+		stream << std::hex << decCRC;
+		std::string result(stream.str()); // String form of the hex value
+
+		std::string hexArr[4] = { result.substr(0, 2), result.substr(2, 2),
+			result.substr(4, 2), result.substr(6, 2) };
+
+		for (int i = 0; i < 4; i++)
+		{
+			crcArr[i] = hex_to_int(hexArr[i]);
+		}
+		crcArr[4] = '\0';
+
+		return crcArr;
+	}
+
+	static int hex_to_int(std::string hexString)
+	{
+		int x;
+
+		std::stringstream ss;
+		ss << std::hex << hexString;
+		ss >> x;
+
+		return x;
 	}
 
 };

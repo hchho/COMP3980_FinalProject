@@ -1,5 +1,7 @@
 #include "StateControllerHelper.h"
 #include "ControlCodes.h"
+#include "ErrorHandler.h"
+#include "boost/boost/crc.hpp"
 #include <numeric>
 #include <iomanip>
 #include <sstream>
@@ -66,19 +68,12 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 
 	appendDataWithNullChars(data);
 
-	//TODO MISSING CRC IMPLEMENTATION TO ADD INTO FRAME
-	//int crc = calculatecrc(data)
-	int crc = 54;
+	int crc = ErrorHandler::checkSumCalculator(data);
 
-	std::string crc_s{ buildCRCString(crc) };
-	char crc_arr[4];
-	strcpy(crc_arr, crc_s.c_str());
-
-	// --------------- COPY CRC FROM POSITIONS 1019 - 1022------------------
-	for (char c : crc_arr) {
-		frame.push_back(c);
-	}
-
+	std::string crc_s{ ErrorHandler::getHexCRC(crc) };
+	
+	frame += crc_s;
+	
 	frame.push_back(eof);
 	return frame;
 }
@@ -144,24 +139,5 @@ std::string StateControllerHelper::buildCRCString(int crc_value)
 	stream << std::hex << crc_value;
 	std::string result(stream.str());
 
-	//std::string hexArr[ARR_SIZE] = { result.substr(0, 2), result.substr(2, 2),
-	//	result.substr(4, 2), result.substr(6, 2) };
-
-	//for (int i = 0; i < ARR_SIZE; i++)
-	//{
-
-	//	std::stringstream currHex;
-
-	//	currHex << std::hex << hexArr[i];
-	//	int tempInt;
-	//	currHex >> tempInt;
-	//	crcArr[i] = tempInt;
-
-	//}
-
 	return result;
 }
-
-//std::string StateControllerHelper::getFrameContent(char* frame)
-//{
-//}

@@ -100,6 +100,16 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Desktop\COMP3980_FinalProject\FinalProject\boost</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalUsingDirectories>C:\Users\Admin\Desktop\COMP3980_FinalProject\FinalProject\boost</AdditionalUsingDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="finalproject\CommController.cpp" />
     <ClCompile Include="finalproject\DisplayService.cpp" />

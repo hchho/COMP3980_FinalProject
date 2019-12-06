@@ -316,11 +316,10 @@ void StateController::handleInput(char* input)
 			SetEvent(events->handles[7]);
 		}
 		else {
-			//if(CRC Frame) should quick fail if other control character
-			//	Parse Frame
-			// Output Pop array also remember to delete pointers as they are dynamically allocated
-			sess->writeToFile(input);
-			SetEvent(events->handles[6]); // Receive frame in RTR
+			if (ErrorHandler::checksumMatch(input)) {
+				sess->writeToFile(input);
+				SetEvent(events->handles[6]); // Receive frame in RTR
+			}
 		}
 		break;
 	}
@@ -362,16 +361,10 @@ int StateController::verifyInput(char* input) {
 			return 1;
 		}		
 		break;
-		//}
-		//else // SYNC BITS
-		//	return strncmp(input, &ACK0, 1) == 0 ? 1 : strncmp(input, &REQ0, 1) == 0 ? 2 : 0;
-
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
 		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
-		// 0 = ack0, 1 = ack1, 2 = ENQ
-		// return strncmp(input, &ACK0, 2) ? 0 : strncmp(input, &ACK1, 2) == 0 ? 1 : 2;
 		return i == ACK0 || i == ACK1;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
