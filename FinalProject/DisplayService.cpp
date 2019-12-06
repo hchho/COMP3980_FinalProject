@@ -104,6 +104,8 @@ VOID DisplayService::drawStringBuffer(const char* readBuffer, char delimiter) {
 		// Resets cursor
 		yCoord = yCoord + textMetric.tmHeight + textMetric.tmExternalLeading;
 	}
+	if (delimiter == 'm')
+		yCoord = 0;
 	xCoord = 0;
 
 	ReleaseDC(*windowHandle, deviceContext); // Release device context

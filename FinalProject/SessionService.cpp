@@ -12,6 +12,7 @@
 #include "DisplayService.h"
 #include "StateController.h"
 
+
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		SessionService.cpp -A class that handles all session level events according to the OSI network
 --										architecture.
@@ -126,6 +127,7 @@ VOID SessionService::handleCommandMode(UINT Message, WPARAM wParam) {
 			commController->initializeConnection(TEXT("COM1"));
 			createThread(CommService::readFunc, commController);
 			createThread(CommService::protocolFunc, stateController);
+			createThread(CommService::statisticsFunc, stats);
 			currentMode = CONNECT_MODE;
 			dispService->setMenuItemState(currentMode);
 			break;
@@ -299,7 +301,7 @@ DWORD SessionService::readFile(LPVOID input) {
 		return 0;
 	}
 
-	char ReadBuffer[1017] = { 0 }; // The buffer size should be defined somewhere
+	char ReadBuffer[1018] = { 0 }; // The buffer size should be defined somewhere
 	
 	PurgeComm(hFile, PURGE_RXCLEAR);
 
@@ -308,7 +310,7 @@ DWORD SessionService::readFile(LPVOID input) {
 	SetEvent(stateController->getEvents()->handles[eventIndex]);
 
 	//It should equal the buffer size - 1 to give room for null character
-	while (ReadFile(hFile, ReadBuffer, 1016, &dwBytesRead, NULL)) {
+	while (ReadFile(hFile, ReadBuffer, 1017, &dwBytesRead, NULL)) {
 		if (dwBytesRead == 0) {
 			break;
 		}
@@ -346,7 +348,7 @@ DWORD SessionService::readFile(LPVOID input) {
 -- Calling this function will write the characters stored within the buffer to the desginated output file in append mode.
 --
 ----------------------------------------------------------------------------------------------------------------------*/
-VOID SessionService::writeToFile(const char* data) {
+VOID SessionService::writeToFile(std::string data) {
 	std::fstream outputFile;
 	outputFile.open("output.txt", std::fstream::app);
 	outputFile << data;

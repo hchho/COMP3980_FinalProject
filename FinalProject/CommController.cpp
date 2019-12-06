@@ -8,6 +8,7 @@
 #include "ErrorHandler.h"
 #include "CommController.h"
 #include "StateController.h"
+#include "Statistics.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		CommController.cpp -	A controller class that controls all operations in the physical
@@ -178,11 +179,11 @@ VOID CommController::writeFrameToPort(std::string &frame)
 -- NOTES:
 -- Call this function to write a frame to the port.
 ----------------------------------------------------------------------------------------------------------------------*/
-VOID CommController::writeControlMessageToPort(const char* controlMessage)
+VOID CommController::writeControlMessageToPort(char mostSignificantByte, const char* controlMessage)
 {
 	int error;
 	std::string test;
-	test.push_back(_NUL);
+	test.push_back(mostSignificantByte);
 	test.push_back(*controlMessage);
 	LPCSTR pointerToMessageStart = nullptr;
 	pointerToMessageStart = &test[0];

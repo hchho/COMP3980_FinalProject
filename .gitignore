@@ -3,6 +3,7 @@
 Debug
 x64
 .gitignore
+boost
 =======
 ﻿################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
