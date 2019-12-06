@@ -32,7 +32,8 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::IDLE:
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
-			if (indexOfSignaledEvent == 0) {
+			// Receive File input
+			if(indexOfSignaledEvent == 0) {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
@@ -43,6 +44,13 @@ DWORD StateController::handleProtocolWriteEvents() {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
+			} 
+			else if (!outputBuffer.empty()) {
+				serv->drawStringBuffer("Setting Enq", 'n');
+				sendCommunicationMessageToCommController(0);
+				setState(PREP_TX);
+				ResetEvent(getEvents()->handles[0]);
+				break;
 			}
 			else if (!outputBuffer.empty()) {
 				serv->drawStringBuffer("Bidding for channel and output buffer not empty", 'n');
@@ -195,7 +203,7 @@ void StateController::handleInput(char* input)
 		if (verifyInput(input) == 2) {
 			outputBuffer.pop();
 			serv->drawStringBuffer("Receiving REQ", 'n');
-			if (++reqCounter > 3 || releaseTX) {
+			if (++reqCounter > 3 && releaseTX) {
 				serv->drawStringBuffer("Switching out from REQ", 'n');
 				reqCounter = 0;
 				SetEvent(events->handles[9]);
