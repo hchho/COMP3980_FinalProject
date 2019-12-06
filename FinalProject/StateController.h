@@ -52,6 +52,8 @@ public:
 	};
 	std::queue<std::string> outputBuffer;
 
+
+	char calculateMSBofControlCode(int syncBit);
 	DWORD handleProtocolWriteEvents();
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);

@@ -11,7 +11,6 @@ public:
 	std::string getFrameContent(char* frame);
 	std::string buildFrame(std::string data, int syncBit);
 	void appendDataWithNullChars(std::string& data);
-	void unpackFrame(char* frame);
 };
 
 #endif

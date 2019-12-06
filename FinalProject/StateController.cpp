@@ -39,38 +39,6 @@
 ----------------------------------------------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	parseDataFrame
---
--- DATE:		Dec 05, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Albert Liu
---
--- PROGRAMMER:	Albert Liu
---
--- INTERFACE:	VOID parseDataFrame(char* frame)
---						char* frame - the frame that will be unpacked
---
--- RETURNS:		void
---
--- NOTES:
--- Calling this function on a frame will unpack the frame into its respective segments: SYN, STX, Data, CRC, and EOT. This
--- is used to generate the correct SYN bit that should be sent in the next message.
-----------------------------------------------------------------------------------------------------------------------*/
-void StateController::parseDataFrame(char* frame)
-{
-	sHelper->unpackFrame(frame);
-	//CRC on frame using byte 1018-1022
-
-	//Read header
-	//if (sync)
-		//Read Data
-
-
-}
-
-/*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	handleProtocolWriteEvents
 --
 -- DATE:		Dec 05, 2019
@@ -465,7 +433,7 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 }
 
 
-char calculateMSBofControlCode(int syncBit) {
+char StateController::calculateMSBofControlCode(int syncBit) {
 	return syncBit == 1 ? SYN1 : SYN0; // SYN0 == _NUL, covers all cases for control codes
 }
 
