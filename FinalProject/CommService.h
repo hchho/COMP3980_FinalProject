@@ -20,6 +20,9 @@
 --		DATE:			Oct 13, 2019
 --		REVISER:		Michael Yu
 --		DESCRIPTION:	Updated RFID func to use event driven methods
+--		DATE:			Dec 05, 2019
+--		REVISER:		Albert Liu
+--		DESCRIPTION:	Added statisticsFunc to display protocol statstics
 --
 -- DESIGNER:		Henry Ho
 --
@@ -53,10 +56,48 @@ struct CommService {
 		return ((CommController*)param)->handleRead(0);
 	};
 
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	protocolFunc
+	--
+	-- DATE:		Dec 04, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Michael Yu
+	--
+	-- PROGRAMMER:	Michael Yu
+	--
+	-- INTERFACE:	DWORD WINAPI protocolFunc(LPVOID param)
+	--					LPVOID param:	the input to pass into the threading function
+	--
+	-- RETURNS:		DWORD
+	--
+	-- NOTES:
+	-- Call this function initiate the protocol thread
+	----------------------------------------------------------------------------------------------------------------------*/
 	static DWORD WINAPI protocolFunc(LPVOID param) {
 		return ((StateController*)param)->handleProtocolWriteEvents();
 	};
 
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	statisticsFunc
+	--
+	-- DATE:		Dec 05, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Albert Liu
+	--
+	-- PROGRAMMER:	Albert Liu
+	--
+	-- INTERFACE:	DWORD WINAPI statisticsFunc(LPVOID param)
+	--					LPVOID param:	the input to pass into the threading function
+	--
+	-- RETURNS:		DWORD
+	--
+	-- NOTES:
+	-- Call this function display protocol statistics
+	----------------------------------------------------------------------------------------------------------------------*/
 	static DWORD WINAPI statisticsFunc(LPVOID param) {
 		return ((Statistics*)param)->drawStatistics();
 	};

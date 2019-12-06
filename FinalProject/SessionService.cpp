@@ -322,7 +322,6 @@ DWORD SessionService::readFile(LPVOID input) {
 		
 		memset(&ReadBuffer, 0, sizeof(ReadBuffer));
 	}
-//	ResetEvent(stateController->getEvents()->handles[eventIndex]);
 
 	CloseHandle(hFile);
 	return 0;

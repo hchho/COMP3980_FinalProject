@@ -14,11 +14,8 @@
 -- FUNCTIONS:
 --
 --					DWORD handleProtocolWriteEvents()
---					void handleControlCode(char* code)
 --					void handleInput(char* input)
 --					void drawBufferToWindow(const char* buff)
---					void parseDataFrame(char* frame)
---					void parseDataFrame(char* frame)
 --					void sendCommunicationMessageToCommController(DWORD event)
 --					void sendFrameToCommController(std::string data)
 --					int verifyInput(char* input)
@@ -295,8 +292,7 @@ void StateController::handleInput(char* input)
 				if (ErrorHandler::checksumMatch(content)) {
 					stats->incrementPacketAccepted();
 					sess->writeToFile(content.substr(2,1017)); // Grabs Payload to write to file
-					SetEvent(events->handles[6]); // Receive frame in 
-				//  Maybe need to Clear input buffer. Discard frame
+					SetEvent(events->handles[6]); 
 				}
 				else if (syncBit != input[0]) { // check first char of the input data
 					stats->incrementPacketRejected();
