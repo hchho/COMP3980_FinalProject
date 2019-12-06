@@ -332,16 +332,13 @@ void StateController::handleInput(char* input)
 					SetEvent(events->handles[6]); // Receive frame in 
 				//  Maybe need to Clear input buffer. Discard frame
 				}
-				else if (syncBit != *input) { // check first char of the input data
-					syncBit = syncBit == 0 ? 1 : 0; // generate the opposite SYNC and send ACK alongside it
-
+				else if (syncBit != input[0]) { // check first char of the input data
+					syncBit = syncBit == 0 ? 1 : 0; // generate the opposite SYNC and send ACK alongside 
 					SetEvent(events->handles[6]);
 				}
 				else {
 					inputBuffer = { 0 }; // Clear input buffer. Discard frame
 				}
-				sess->writeToFile(input);
-				SetEvent(events->handles[6]); // Receive frame in RTR
 			}
 			break;
 		}
@@ -386,6 +383,7 @@ int StateController::verifyInput(char* input) {
 			// flip SYNCBIT
 			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit since I received a flipped ACK
 			return 2;
+		}
 		break;
 		//}
 		//else // SYNC BITS
@@ -407,6 +405,7 @@ int StateController::verifyInput(char* input) {
 	}
 	return 0;
 }
+
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	sendCommunicationMessageToCommController
