@@ -228,7 +228,7 @@ struct ErrorHandler {
 		char crcArr[5];
 
 		std::stringstream stream;
-		stream << std::hex << decCRC;
+		stream << std::setfill('0') << std::setw(8)<< std::hex << decCRC;
 		std::string result(stream.str()); // String form of the hex value
 
 		std::string hexArr[4] = { result.substr(0, 2), result.substr(2, 2),
@@ -273,7 +273,7 @@ struct ErrorHandler {
 		std::string hexString;
 		std::stringstream stream;
 		for (int i = 0; i < 4; i++) {
-			stream << std::hex << (unsigned int)(unsigned char)charArr[i];
+			stream << std::setfill('0') <<std::setw(2)<< std::hex << (unsigned int)(unsigned char)charArr[i];
 		}
 		hexString += stream.str();
 
