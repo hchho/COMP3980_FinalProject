@@ -6,27 +6,6 @@
 #include "ControlCodes.h"
 #include <string>
 
-/*------------------------------------------------------------------------------------------------------------------
--- HEADER FILE:		ErrorHandler.h - A struct that handles error codes and displays an error message
---
--- PROGRAM:			DumbSerialPortEmulator
---
--- FUNCTIONS:
---					VOID handleError(UINT errorCode)
---
---
--- DATE:			Sept 28, 2019
---
--- REVISIONS:		(N/A)
---
--- DESIGNER:		Henry Ho
---
--- PROGRAMMER:		Henry Ho
---
--- NOTES:
--- This is a public struct and should be able to be invoked anywhere in the application. The purpose is
--- to handle any error and use DisplayService to display to the user.
-----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
 
 	int checkSumCalculator(char* content);

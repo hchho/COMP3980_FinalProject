@@ -9,6 +9,37 @@
 
 using namespace std;
 
+/*------------------------------------------------------------------------------------------------------------------
+-- HEADER FILE:		ErrorHandler.h - A struct that handles error codes and displays an error message
+--
+-- PROGRAM:			DumbSerialPortEmulator
+--
+-- FUNCTIONS:
+--					static boolean verifyControl(char* input, const char* control)
+--					static BOOL verifyCommand(const char* input) 
+--					VOID handleError(UINT errorCode)
+--					int checkSumCalculator(char* content)
+--					bool checksumMatch(char* content)
+--					std::string int_to_hex(int my_integer)
+--					int hex_to_int(char hexArray[])
+--
+-- DATE:			Sept 28, 2019
+--
+-- REVISIONS:		Dec 04, 2019
+-- REVISER:			Henry Ho, Chirag Fernandez
+-- DESCRIPTION:		Added CRC conversion and error calculation methods
+--
+-- DESIGNER:		Henry Ho
+--
+-- PROGRAMMER:		Henry Ho
+--
+-- NOTES:
+-- This is a public struct and should be able to be invoked anywhere in the application. The purpose is
+-- to handle any error and use DisplayService to display to the user. This class has now been updated to handle
+-- the responsibilities of error checking for CRC values for 1024B checksums
+----------------------------------------------------------------------------------------------------------------------*/
+
+
 int convertCharArrayToInteger(char* header);
 int convertBinaryToDecimal(int n);
 int hex_to_int(char hexArray[]);
