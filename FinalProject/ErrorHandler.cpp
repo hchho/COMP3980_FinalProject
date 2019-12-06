@@ -87,6 +87,26 @@ bool checksumMatch(char* content) {
 	return (convertedHeader == convertedDataWord);
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	getHexCRC
+--
+-- DATE:		Nov 27, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Chirag Fernandez
+--
+-- PROGRAMMER:	Chirag Fernandez, Henry Ho
+--
+-- INTERFACE:	string getHexCRC(int decCRC)
+--					int decCRC:		integer that contains the decimal value of the CRC
+--
+-- RETURNS:		string
+--					hexadecimal string of the CRC converted from the decimal value
+--
+-- NOTES:
+-- Call this function to convert the CRC value from integer to hexadecimal.
+----------------------------------------------------------------------------------------------------------------------*/
 string getHexCRC(int decCRC)
 {
 
@@ -116,6 +136,26 @@ string getHexCRC(int decCRC)
 }
 
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	getHexCRC
+--
+-- DATE:		Nov 27, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Chirag Fernandez
+--
+-- PROGRAMMER:	Chirag Fernandez, Henry Ho
+--
+-- INTERFACE:	string getHexCRC(int decCRC)
+--					int decCRC:		integer that contains the decimal value of the CRC
+--
+-- RETURNS:		string
+--					integer string of the CRC converted from hexadecimal value
+--
+-- NOTES:
+-- Call this function to convert the CRC value from integer to hexadecimal.
+----------------------------------------------------------------------------------------------------------------------*/
 string int_to_hex(int my_integer)
 {
 	std::stringstream sstream;
@@ -125,6 +165,26 @@ string int_to_hex(int my_integer)
 	return result;
 }
 
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	hex_to_int
+--
+-- DATE:		Nov 27, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Chirag Fernandez
+--
+-- PROGRAMMER:	Chirag Fernandez
+--
+-- INTERFACE:	int hex_to_int(char hexArray[])
+--					char hexArray[] - character array containing the hexadecimal values of the CRC
+--
+-- RETURNS:		int
+--
+-- NOTES:
+-- Call this function to return an integer value of the hexadecimal CRC value
+----------------------------------------------------------------------------------------------------------------------*/
 int hex_to_int(char hexArray[])
 {
 

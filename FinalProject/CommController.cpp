@@ -26,7 +26,8 @@
 --					VOID resetCommConfig(void)
 --					VOID setComPort(LPCWSTR commPortName)
 --					VOID drawBufferToWindow(const char* input)
---
+--					VOID writeControlMessageToPort(int mostSignificantByte, const char* frame);
+--					VOID writeFrameToPort(std::string &frame);
 --
 -- DATE:			Sept 28, 2019
 --
@@ -40,6 +41,9 @@
 --		DATE:			Oct 13, 2019
 --		REVISER:		Michael Yu
 --		DESCRIPTION:	Removed initializeRFID method
+--		DATE:			Dec 05, 2019
+--		REVISER:		Michael Yu
+--		DESCRIPTION:	Added writeControlMessageToPort and writeFrameToPort
 --
 -- DESIGNER:		Henry Ho
 --
