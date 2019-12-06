@@ -100,7 +100,7 @@ VOID CommController::drawSingleCharToWindow(char input) {
 }
 
 /*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	drawSingleCharToWindow
+-- FUNCTION:	drawBufferToWindow
 --
 -- DATE:		Sept 28, 2019
 --
@@ -122,6 +122,25 @@ VOID CommController::drawBufferToWindow(const char* input, char delimiter) {
 	displayService->drawStringBuffer(input, delimiter);
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	writeFrameToPort
+--
+-- DATE:		Dec 03, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu, Henry Ho
+--
+-- INTERFACE:	VOID drawBufferToWindow(std::string &frame)
+--					string &frame - represents the constructed frame to be written to the port
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write a frame to the port.
+----------------------------------------------------------------------------------------------------------------------*/
 VOID CommController::writeFrameToPort(std::string &frame)
 {
 	LPCSTR pointerToBufferStart = nullptr;
@@ -129,14 +148,32 @@ VOID CommController::writeFrameToPort(std::string &frame)
 	// purge output buffer before sending
 	int error;
 	if (WriteFile(commHandle, pointerToBufferStart, 1024, NULL, &OVERLAPPED())) {
-		//DWORD fLen = strlen(frame);
-		//if (WriteFile(commHandle, frame, fLen, NULL, &OVERLAPPED())) {
 		error = GetLastError();
-		DisplayService::displayMessageBox("WriteFile filed for frame");
+		DisplayService::displayMessageBox("WriteFile failed for frame");
 	}
 	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	writeControlMessageToPort
+--
+-- DATE:		Dec 03, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu, Henry Ho
+--
+-- INTERFACE:	VOID writeControlMessageToPort(int mostSignificantByte, const char* controlMessage)
+--							int mostSignificantByte - represents the first byte of the control message to be sent; can be _NUL, SYN0, or SYN1
+--							const char* controlMessage - represents the second byte of the control message; char of interest
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to write a frame to the port.
+----------------------------------------------------------------------------------------------------------------------*/
 VOID CommController::writeControlMessageToPort(const char* controlMessage)
 {
 	int error;

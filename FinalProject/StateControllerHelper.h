@@ -11,6 +11,7 @@ public:
 	std::string getFrameContent(char* frame);
 	std::string buildFrame(std::string data);
 	void appendDataWithNullChars(std::string& data);
+
 };
 
 #endif
