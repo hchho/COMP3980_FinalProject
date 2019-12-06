@@ -86,6 +86,9 @@
     <ClInclude Include="FinalProject\StateControllerHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FinalProject\Statistics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="finalproject\WinMenu.rc">

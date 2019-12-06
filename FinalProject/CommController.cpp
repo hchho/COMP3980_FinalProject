@@ -8,6 +8,7 @@
 #include "ErrorHandler.h"
 #include "CommController.h"
 #include "StateController.h"
+#include "Statistics.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		CommController.cpp -	A controller class that controls all operations in the physical

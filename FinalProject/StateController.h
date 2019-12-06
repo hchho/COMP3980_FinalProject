@@ -12,6 +12,8 @@
 #include <string>
 #include <random>
 
+
+class Statistics;
 class CommController;
 class SessionService;
 
@@ -33,6 +35,7 @@ private:
 	CommController* comm;
 	DisplayService* serv;
 	StateControllerHelper* sHelper;
+	Statistics* stats;
 
 	// Handles data frame when in data read state and 
 	// 
@@ -47,7 +50,7 @@ private:
 public:
 
 	StateController() : comm(nullptr), serv(nullptr), sess(nullptr) {};
-	StateController(CommController* comm, DisplayService* serv, SessionService* sess) : comm(comm), serv(serv), sess(sess), events(new Events()) {
+	StateController(CommController* comm, DisplayService* serv, SessionService* sess, Statistics* stats) : comm(comm), serv(serv), sess(sess), events(new Events()), stats(stats) {
 		state = IDLE;
 	};
 	std::queue<std::string> outputBuffer;
@@ -58,7 +61,6 @@ public:
 	void handleInput(char* input);
 	void drawBufferToWindow(const char* buff);
 	Events* getEvents() { return events; };
-
 	STATES getState() { return state; };
 
 };

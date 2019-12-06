@@ -12,6 +12,7 @@
 #include "DisplayService.h"
 #include "StateController.h"
 
+
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		SessionService.cpp -A class that handles all session level events according to the OSI network
 --										architecture.
@@ -126,6 +127,7 @@ VOID SessionService::handleCommandMode(UINT Message, WPARAM wParam) {
 			commController->initializeConnection(TEXT("COM1"));
 			createThread(CommService::readFunc, commController);
 			createThread(CommService::protocolFunc, stateController);
+			createThread(CommService::statisticsFunc, stats);
 			currentMode = CONNECT_MODE;
 			dispService->setMenuItemState(currentMode);
 			break;

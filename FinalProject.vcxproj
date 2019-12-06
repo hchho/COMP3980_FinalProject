@@ -134,6 +134,7 @@
     <ClInclude Include="FinalProject\StateController.h" />
     <ClInclude Include="FinalProject\StateControllerHelper.h" />
     <ClInclude Include="FinalProject\States.h" />
+    <ClInclude Include="FinalProject\Statistics.h" />
     <ClInclude Include="finalproject\utils.h" />
     <ClInclude Include="finalproject\WINDOW.h" />
   </ItemGroup>

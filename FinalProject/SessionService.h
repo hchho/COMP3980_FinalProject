@@ -6,6 +6,8 @@
 #include "DisplayService.h"
 #include "Events.h"
 
+
+class Statistics;
 class CommController;
 class StateController;
 /*------------------------------------------------------------------------------------------------------------------
@@ -45,6 +47,7 @@ private:
 	CommController* commController;
 	DisplayService* dispService;
 	StateController* stateController;
+	Statistics* stats;
 	int currentMode;
 	VOID createThread(LPTHREAD_START_ROUTINE func, LPVOID param);
 	VOID handleCommandMode(UINT Message, WPARAM wParam);
@@ -55,7 +58,7 @@ public:
 		return ((SessionService*)param)->readFile(0);
 	}
 	SessionService() {};
-	SessionService(CommController* controller, DisplayService* dispService) : commController(controller), dispService(dispService){
+	SessionService(CommController* controller, DisplayService* dispService, Statistics* stats) : commController(controller), dispService(dispService), stats(stats){
 		currentMode = COMMAND_MODE;
 	};
 	VOID handleProcess(UINT Message, WPARAM wParam);

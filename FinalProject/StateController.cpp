@@ -3,6 +3,7 @@
 #include "CommController.h"
 #include "SessionService.h"
 #include "StateControllerHelper.h"
+#include "Statistics.h"
 
 /*------------------------------------------------------------------------------------------------------------------
 -- SOURCE FILE:		StateController.cpp - A controller class that handles all the states in our system related to the data-link
@@ -86,7 +87,6 @@ DWORD StateController::handleProtocolWriteEvents() {
 				setState(RTR);
 			}
 			else if (!outputBuffer.empty()) {
-				serv->drawStringBuffer("Bidding for channel and output buffer not empty", 'n');
 				sendCommunicationMessageToCommController(0); // sending ENQ
 				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[0]);
@@ -113,7 +113,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				setState(RTR);
 			}
 			else {
-				serv->drawStringBuffer("Timed out from RTR", 'n');
+				stats->incrementTimeoutCount();
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(IDLE);
 			}
@@ -126,7 +126,6 @@ DWORD StateController::handleProtocolWriteEvents() {
 				ResetEvent(getEvents()->handles[0]); // Reset to IDLE from IDLE_FILE_INPUT because finished sending
 				ResetEvent(getEvents()->handles[5]); // Reset to IDLE from RTR_FILE_INPUT because finished sending
 				ResetEvent(getEvents()->handles[7]);
-				DisplayService::displayMessageBox("RTS Sending EOT Finished sending");
 				setState(IDLE);
 			}
 			else {
@@ -143,7 +142,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 					if (indexOfSignaledEvent != WAIT_TIMEOUT) { // We received ACK or REQ
 						break;
 					}
-					serv->drawStringBuffer("Resent a frame", 'n');
+					stats->incrementPacketSent();
 					setState(RTS); // following protocol, need to set back to RTS
 				}
 				// Received an ack
@@ -160,6 +159,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 					// set timeout to go to idle; also need to reset releaseTX to false when timeout fires
 				}
 				else if (indexOfSignaledEvent == 2) {// 2 is send EOT because of REQ 
+					stats->incrementTimeoutCount();
 					releaseTX = false;
 					sendCommunicationMessageToCommController(9);
 					std::random_device rdm;
@@ -169,7 +169,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				}
 
 				if (indexOfSignaledEvent == WAIT_TIMEOUT) {
-					serv->drawStringBuffer("Timed out from RTS", 'n');
+					stats->incrementTimeoutCount();
 					setState(IDLE);
 				}
 			}
@@ -177,7 +177,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 		case STATES::PREP_TX:
 			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], 1500);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
-				serv->drawStringBuffer("Timed out from PREP_TX", 'n');
+				stats->incrementTimeoutCount();
 				setState(IDLE);
 				break;
 			}
@@ -254,9 +254,8 @@ void StateController::handleInput(char* input)
 		if (verifyInput(input) == 2) {
 			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verified that I received the correct REQ(SYN)
 			outputBuffer.pop();
-			serv->drawStringBuffer("Receiving REQ", 'n');
+			stats->incrementReqCount();
 			if (++reqCounter > 3 && releaseTX) {
-				serv->drawStringBuffer("Switching out from REQ", 'n');
 				reqCounter = 0;
 				SetEvent(events->handles[9]);
 				break;
@@ -272,7 +271,7 @@ void StateController::handleInput(char* input)
 		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
 			std::random_device rdm;
 			std::mt19937 generator(rdm());
-			serv->drawStringBuffer("Timed out from simultaneous bidding.", 'n');
+			stats->incrementTimeoutCount();
 			DWORD throwawayENQ = WaitForSingleObject(getEvents()->handles[2], distribution(generator));
 			setState(IDLE);
 		}
@@ -291,21 +290,21 @@ void StateController::handleInput(char* input)
 		}
 		else {
 			
-
 			std::string content(input, 1024);
 			if (syncBit == input[0]) {
 				if (ErrorHandler::checksumMatch(content)) {
-
+					stats->incrementPacketAccepted();
 					sess->writeToFile(content.substr(2,1017)); // Grabs Payload to write to file
 					SetEvent(events->handles[6]); // Receive frame in 
 				//  Maybe need to Clear input buffer. Discard frame
 				}
 				else if (syncBit != input[0]) { // check first char of the input data
+					stats->incrementPacketRejected();
 					syncBit = syncBit == 0 ? 1 : 0; // generate the opposite SYNC and send ACK alongside 
 					SetEvent(events->handles[6]);
 				}
 				else {
-					inputBuffer = { 0 }; // Clear input buffer. Discard frame
+					stats->incrementPacketRejected();
 				}
 			}
 			break;
@@ -394,10 +393,12 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	case 0: //IDLE_FILE_INPUT
 		if (state == IDLE) {
 			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ENQ);
+
 			setState(PREP_TX);
 		}
 		break;
 	case 1: //IDLE_RECEIVE_ENQ
+		stats->incrementAckCount();
 		comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ACK0); // This should only be ACK0
 		break;
 	case 5: //RTR_FILE_INPUT
@@ -407,9 +408,10 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 			setState(PREP_TX);
 		}
 		else if (state == RX) {
+			stats->incrementReqCount();
 			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &REQ0);
 			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
-			serv->drawStringBuffer("Sending REQ", 'n');
+			
 		}
 		break;
 	case 6: //RTR_RECEIVE_FRAME
@@ -422,8 +424,8 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 			for (int i = 0; code.size() < 1024; i++) {
 				code += EOT;
 			}
+			stats->incrementPacketSent();
 			comm->writeFrameToPort(code);
-			serv->drawStringBuffer("RTS Done Sending. Sending EOT Finished sending", 'n');
 			setState(IDLE);
 		}
 		break;
@@ -435,9 +437,4 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 
 char StateController::calculateMSBofControlCode(int syncBit) {
 	return syncBit == 1 ? SYN1 : SYN0; // SYN0 == _NUL, covers all cases for control codes
-}
-
-
-void StateController::handleControlCode(char* code) {
-
 }
