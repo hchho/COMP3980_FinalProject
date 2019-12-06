@@ -170,8 +170,8 @@ VOID CommController::writeFrameToPort(std::string &frame)
 --
 -- PROGRAMMER:	Michael Yu, Henry Ho
 --
--- INTERFACE:	VOID writeControlMessageToPort(int mostSignificantByte, const char* controlMessage)
---							int mostSignificantByte - represents the first byte of the control message to be sent; can be _NUL, SYN0, or SYN1
+-- INTERFACE:	VOID writeControlMessageToPort(char mostSignificantByte, const char* controlMessage)
+--							char mostSignificantByte - represents the first byte of the control message to be sent; can be _NUL, SYN0, or SYN1
 --							const char* controlMessage - represents the second byte of the control message; char of interest
 --
 -- RETURNS:		void
