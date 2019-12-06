@@ -152,6 +152,7 @@ VOID CommController::writeControlMessageToPort(const char* controlMessage)
 	}
 	PurgeComm(commHandle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 }
+
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	drawInput
 --
@@ -274,6 +275,28 @@ DWORD CommController::handleRead(LPVOID input) {
 	return 0;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	readHandle
+--
+-- DATE:		Dec 05, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Henry Ho
+--
+-- PROGRAMMER:	Henry Ho
+--
+-- INTERFACE:	void CommController::readHandle(DWORD bytesToReceive)
+--					DWORD bytesToReceive:	denotes the numbef of bytes that will be received in the ReadFile function
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- This method handles types of data that can be received by our protocol: 2 or 1024. The corresponding value is passed
+-- into the ReadFile function call to denote the number of bytes to read. The designated frames are cleared out using
+-- memset. Handles overlapped result that gets sent
+-- to the buffer. Handles the error, in the case that the frame. Th
+----------------------------------------------------------------------------------------------------------------------*/
 void CommController::readHandle(DWORD bytesToReceive) {
 	// Control Codes are 2 chars
 	char controlBuffer[2];

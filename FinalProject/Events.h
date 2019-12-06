@@ -1,8 +1,28 @@
 #pragma once
 #include <Windows.h>
 
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE:		Events.h-	A struct that holds all Events within the system. Several handles are created
+								for each logical grouping of events that are related in signalling.
+--
+-- PROGRAM:			DumbSerialPortEmulator
+--
+-- DATE:			Nov 29, 2019
+-- REVISIONS:
+--		NA
+--
+-- DESIGNER:		Michael Yu
+--
+-- PROGRAMMER:		Michael Yu
+--
+-- NOTES:
+-- This class holds all the events that are possible within the system. The events correspond to those denoted witin the 
+-- protocol: Manifest der Data Kommunistischen Partei.
+----------------------------------------------------------------------------------------------------------------------*/
+
 constexpr static int EVENT_COUNTS = 10;
 constexpr static int ACKNOWLEDGEMENT_HANDLES_COUNT = 3;
+
 
 struct Events {
 

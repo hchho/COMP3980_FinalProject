@@ -4,6 +4,59 @@
 #include "SessionService.h"
 #include "StateControllerHelper.h"
 
+/*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE:		StateController.cpp - A controller class that handles all the states in our system related to the data-link 
+--										protocol and manages all events that are created.
+--
+-- PROGRAM:			DumbSerialPortEmulator
+--
+-- FUNCTIONS:
+--					
+--					DWORD handleProtocolWriteEvents()
+--					void handleControlCode(char* code)
+--					void handleInput(char* input)
+--					void drawBufferToWindow(const char* buff)
+--					void parseDataFrame(char* frame)
+--					void parseDataFrame(char* frame)
+--					void sendCommunicationMessageToCommController(DWORD event)
+--					void sendFrameToCommController(std::string data)
+--					int verifyInput(char* input)
+--
+-- DATE:			Dec 06, 2019
+--
+-- REVISIONS:
+--					N/A
+--
+-- DESIGNER:		Michael Yu, Henry Ho, Albert Liu
+--
+-- PROGRAMMER:		Michael Yu, Henry Ho, Albert Liu
+--
+-- NOTES:
+-- The class is responsible for maintaining and updating the state of the current system in relation to the protocol.
+-- A singular instance of this class lives within the system when the application connects. All events are created and live
+-- only within the StateController. Writing and reading of data in the physical layer are delegated to the CommController 
+-- to perform the appropriate task. 
+----------------------------------------------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	parseDataFrame
+--
+-- DATE:		Dec 05, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Albert Liu
+--
+-- PROGRAMMER:	Albert Liu
+--
+-- INTERFACE:	VOID parseDataFrame(char* frame)
+--						char* frame - the frame that will be unpacked 
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Calling this function on a frame will unpack the frame into its respective segments: SYN, STX, Data, CRC, and EOT.
+----------------------------------------------------------------------------------------------------------------------*/
 void StateController::parseDataFrame(char* frame)
 {
 	//CRC on frame using byte 1018-1022
@@ -15,12 +68,27 @@ void StateController::parseDataFrame(char* frame)
 
 }
 
-void StateController::drawBufferToWindow(const char* buff)
-{
-	serv->drawStringBuffer(buff);
-}
-
-/* Thread function that will be passed into the writing thread. Infinitely loop while connected*/
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	handleProtocolWriteEvents
+--
+-- DATE:		Dec 05, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu
+--
+-- INTERFACE:	DWORD handleProtocolWriteEvents()
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Thread function that handles all writing events within the program. The system will infinitely loop while the program is
+-- running. The system immediately starts off in IDLE until a valid event(ENQ, FILE_INPUT, RTR_FILE_INPUT) is signaled to the system.
+-- Based on the current state of the system and the event that is signaled, the system will send the corresponding data to the 
+-- writing port. Random timeout of the system is generated here when the current system is sending frames and receives consecutive REQs.
+----------------------------------------------------------------------------------------------------------------------*/
 DWORD StateController::handleProtocolWriteEvents() {
 	DWORD indexOfSignaledEvent;
 	DWORD indexOfSignaledEvent2;
@@ -170,6 +238,24 @@ void StateController::sendFrameToCommController(std::string data) {
 	comm->writeFrameToPort(frame);
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	handleInput
+--
+-- DATE:		Dec 05, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Albert Liu
+--
+-- PROGRAMMER:	Albert Liu, Henry Ho, Michael Yu
+--
+-- INTERFACE:	VOID handleInput(char* input)
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to process the control code input that is received and respond the the corresponding code.
+----------------------------------------------------------------------------------------------------------------------*/
 void StateController::handleInput(char* input)
 {
 	// Depending on state figure out what to expect and if correct ack then signal event
@@ -240,7 +326,25 @@ void StateController::handleInput(char* input)
 	}
 }
 
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	verifyInput
+--
+-- DATE:		Nov 27, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Albert Liu
+--
+-- PROGRAMMER:	Albert Liu, Henry Ho
+--
+-- INTERFACE:	int StateController::verifyInput(char* input)
+--					char* input - represents the value of the control code character that is received by the system
+--
+-- RETURNS:		int
+--
+-- NOTES:
+-- Call this function to verify the control code received is a valid code during the current state of the system.
+----------------------------------------------------------------------------------------------------------------------*/
 int StateController::verifyInput(char* input) {
 	int i = *(input + 1);
 	switch (state) {
@@ -302,12 +406,14 @@ int StateController::verifyInput(char* input) {
 --
 -- PROGRAMMER:	Henry Ho
 --
--- INTERFACE:
+-- INTERFACE:	void StateController::sendCommunicationMessageToCommController(DWORD event)
+--					DWORD event - represents the event that was signalled during the current state in the system
 --
 -- RETURNS:		void
 --
 -- NOTES:
--- Call this function to write a control message to the port.
+-- Call this function to write a control message to the port. Messages that are sent to the port are dependent on the combination of
+-- the current state of the system and the event that is currently signaled.
 ----------------------------------------------------------------------------------------------------------------------*/
 void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	switch (event) {

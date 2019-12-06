@@ -7,6 +7,34 @@
 #include <string>
 
 /*------------------------------------------------------------------------------------------------------------------
+-- SOURCE FILE:		StateControllerHelper.cpp - A controller class that handles any external functionality that the
+--						StateController requires. Main functionalities consist of packaging and unpackaging the frames
+--						that are sent/received.
+--
+-- PROGRAM:			DumbSerialPortEmulator
+--
+-- FUNCTIONS:
+--
+--					std::string buildCRCString(int crc_value);
+--					std::string getFrameContent(char* frame);
+--					std::string buildFrame(std::string data);
+--					void appendDataWithNullChars(std::string& data);
+--
+-- DATE:			Dec 03, 2019
+--
+-- REVISIONS:
+--					N/A
+--
+-- DESIGNER:		Chirag Fernandez, Michael Yu
+--
+-- PROGRAMMER:		Chirag Fernandez, Michael Yu
+--
+-- NOTES:
+-- The controller class manages the functional tasks pertaining to the construction and deconstruction of the frame that
+-- is required by the the StateController. CRC generation is handled by this class.
+----------------------------------------------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	buildFrame
 --
 -- DATE:		Nov 30, 2019
@@ -55,34 +83,27 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 	return frame;
 }
 
-//char* StateControllerHelper::buildFrame(char* data)
-//{
-//	char* frame = new char[1024];
-//
-//	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
-//	frame[0] = SYN;
-//	// --------------- IMPLEMENT A CHECK FOR SYNC STATE ------------------
-//	frame[1] = STX;
-//	// --------------- COPY DATA FROM POSITIONS 2 - 1018 ------------------
-//
-//	strncpy(frame + 2, data, data_size);
-//
-//	//int crc = calculatecrc(data)
-//	int crc = 54;
-//
-//	std::string crc_s = buildCRCString(crc);
-//
-//	char crc_arr[4];
-//	strcpy(crc_arr, crc_s.c_str());
-//
-//	// --------------- COPY CRC FROM POSITIONS 1019 - 1022------------------
-//	strncpy(frame + 2 + data_size, crc_arr, 4);
-//
-//	frame[1023] = eof;
-//
-//	return frame;
-//}
-
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	buildFrame
+--
+-- DATE:		Dec 03, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Michael Yu
+--
+-- PROGRAMMER:	Michael Yu
+--
+-- INTERFACE:	appendDataWithNullChars(std::string& data)
+--						string& data - data that is received from the file that will be packaged into a frame
+--
+-- RETURNS:		void
+--
+-- NOTES:
+-- Call this function to manipulate the actual string value that is passed in. This will create a string of 1017 data bytes
+-- using the current 1017 bytes in the input buffer. If there is less than 1017 in the input buffer, this function will
+-- pad the remaining bytes of the data with _NUL characters.
+----------------------------------------------------------------------------------------------------------------------*/
 void StateControllerHelper::appendDataWithNullChars(std::string& data) {
 	size_t dataSize = data.size();
 
@@ -93,6 +114,27 @@ void StateControllerHelper::appendDataWithNullChars(std::string& data) {
 	}
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	buildCRCString
+--
+-- DATE:		Dec 02, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Chirag Fernandez
+--
+-- PROGRAMMER:	Chirag Fernandez
+--
+-- INTERFACE:	buildCRCString(int crc_value)
+--						int crc_value - integer value of the crc that is calculated from the 1017 bytes of data in the 
+--											in the current frame
+--
+-- RETURNS:		std::string
+--
+-- NOTES:
+-- Call this function to combine the current string with the gnerated CRC value from the boost library. Returns a 
+-- new string containing the current state of the frame with the CRC value (1022 bytes).
+----------------------------------------------------------------------------------------------------------------------*/
 std::string StateControllerHelper::buildCRCString(int crc_value)
 {
 	const int ARR_SIZE = 4;

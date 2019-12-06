@@ -24,6 +24,8 @@
 --					VOID handleCommandeMode(UINT Message, WPARAM wParam)
 --					VOID handleConnectMode(UINT Message, WPARAM wParam)
 --					VOID handleProcess(UINT Message, WPARAM wParam);
+--				DWORD SessionService::readFile(LPVOID input)
+--					VOID SessionService::writeToFile(const char* data)
 --
 --
 -- DATE:			Sept 28, 2019
@@ -38,10 +40,13 @@
 --		DATE:			Oct 13, 2019
 --		REVISER:		Michael Yu
 --		DESCRIPTION:	Updated toggle menu item state method call
+--		DATE:			Dec 05, 2019
+--		REVISER:		Henry Ho
+--		DESCRIPTION:	Added readFile and writeToFile functions for processing file upload and download
 --
 -- DESIGNER:		Henry Ho
 --
--- PROGRAMMER:		Henry Ho
+-- PROGRAMMER:		Henry Ho, Michael Yu
 --
 -- NOTES:
 -- The service class handles messages from the system. All actions are mapped to the menu items defined in WINMENU
@@ -231,6 +236,30 @@ VOID SessionService::handleProcess(UINT Message, WPARAM wParam) {
 	}
 }
 
+
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	readFile
+--
+-- DATE:		Dec 05, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Henry Ho
+--
+-- PROGRAMMER:	Henry Ho
+--
+-- INTERFACE:	DWORD readFile(LPVOID input)
+--					LPVOID input:	the input for this function. It is not used in this method.
+--
+-- RETURNS:		DWORD
+--
+-- NOTES:
+-- This should be called inside a separate thread because of the while-loop inside this function. The ReadFile
+-- method uses an overlap structure, which requires events and timeout handling. This thread function reads data from
+-- the detected file input source at a fixed size, corresponding to the size of the data in our frames (1017B). The 
+-- following thread is triggered when the system detects a file input through the upload button of our program.
+--
+----------------------------------------------------------------------------------------------------------------------*/
 DWORD SessionService::readFile(LPVOID input) {
 	HANDLE hFile;
 	DWORD dwBytesRead;
@@ -297,6 +326,26 @@ DWORD SessionService::readFile(LPVOID input) {
 	return 0;
 }
 
+/*------------------------------------------------------------------------------------------------------------------
+-- FUNCTION:	writeToFile
+--
+-- DATE:		Dec 05, 2019
+--
+-- REVISIONS:	(N/A)
+--
+-- DESIGNER:	Henry Ho
+--
+-- PROGRAMMER:	Henry Ho
+--
+-- INTERFACE:	DWORD writeToFile(const char* data)
+--					const char* data: represents the data received from a frame that will be printed to an arbitrary file
+--
+-- RETURNS:		VOID
+--
+-- NOTES:
+-- Calling this function will write the characters stored within the buffer to the desginated output file in append mode.
+--
+----------------------------------------------------------------------------------------------------------------------*/
 VOID SessionService::writeToFile(const char* data) {
 	std::fstream outputFile;
 	outputFile.open("output.txt", std::fstream::app);

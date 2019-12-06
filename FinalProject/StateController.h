@@ -26,23 +26,23 @@ private:
 	char* inputBuffer{ 0 };
 	boolean output = false;;
 	boolean releaseTX = false;
+	std::uniform_int_distribution<int> distribution{ 0, 1500 };
 
 	Events* events;
 	SessionService* sess;
 	CommController* comm;
 	DisplayService* serv;
 	StateControllerHelper* sHelper;
-	std::uniform_int_distribution<int> distribution{ 0, 1500 };
 
 	// Handles data frame when in data read state and 
-	void parseDataFrame(char* frame);
 	// 
-	void handleControlCode(char* code);
 	void setState(STATES state) { this->state = state; };
 
-	int verifyInput(char* input);
+	void handleControlCode(char* code);
+	void parseDataFrame(char* frame);
 	void sendCommunicationMessageToCommController(DWORD event);
 	void sendFrameToCommController(std::string data);
+	int verifyInput(char* input);
 
 public:
 
@@ -57,7 +57,6 @@ public:
 	void drawBufferToWindow(const char* buff);
 	Events* getEvents() { return events; };
 
-	// Getters
 	STATES getState() { return state; };
 
 };
