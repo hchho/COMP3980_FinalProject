@@ -111,13 +111,13 @@ struct ErrorHandler {
 -- NOTES:
 -- Call this function to calculate the checksum for a given dataword in char array format.
 ----------------------------------------------------------------------------------------------------------------------*/
-	static int checkSumCalculator(std::string content) {
+	static unsigned int checkSumCalculator(std::string content) {
 
 		// Standard idiom for calculating a CRC-32 checksum using the boost library
 
 		// UNCOMMENT AFTER ADDING LIBRARY
 		boost::crc_32_type crc_result;
-		crc_result.process_bytes(content.data(), content.length() - 6); // Check 0-1018 bytes
+		crc_result.process_bytes(content.data(), content.length()); // Check 0-1018 bytes
 		const unsigned int checksum = crc_result.checksum();
 
 		return checksum;
@@ -154,7 +154,7 @@ struct ErrorHandler {
 		return checkSumForReceivedFrame == convertedReceivedChecksum;
 	}
 
-	static std::string getHexCRC(int decCRC)
+	static std::string getHexCRC(unsigned int decCRC)
 	{
 		char crcArr[5];
 

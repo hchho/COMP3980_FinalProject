@@ -66,9 +66,9 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 		frame.push_back(data.at(i));
 	}
 
-	appendDataWithNullChars(data);
+	appendDataWithNullChars(frame);
 
-	int crc = ErrorHandler::checkSumCalculator(data);
+	unsigned int crc = ErrorHandler::checkSumCalculator(frame);
 
 	std::string crc_s{ ErrorHandler::getHexCRC(crc) };
 	
@@ -102,8 +102,8 @@ std::string StateControllerHelper::buildFrame(std::string data) {
 void StateControllerHelper::appendDataWithNullChars(std::string& data) {
 	size_t dataSize = data.size();
 
-	if (dataSize < 1017) {
-		while (++dataSize < 1017) {
+	if (dataSize < 1020) {
+		while (++dataSize < 1020) {
 			data.push_back(_NUL);
 		}
 	}
