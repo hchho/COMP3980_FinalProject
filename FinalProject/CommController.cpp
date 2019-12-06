@@ -336,7 +336,7 @@ void CommController::readHandle(DWORD bytesToReceive) {
 		// Handle issues with actually failing to communitcate here
 		// Only for data frames
 		GetOverlappedResult(commHandle, &overlapRead, &bytesReceived, TRUE);
-		if (bytesReceived > 2) {
+		if (bytesReceived > 2) { // This must be greater than two to receive a frame of size 1024
 			stateController->handleInput(inputBuffer);
 		}
 	}
@@ -381,6 +381,10 @@ VOID CommController::initializeConnection(LPCWSTR portName) {
 		return;
 	};
 
+	COMMTIMEOUTS to;
+	to.ReadIntervalTimeout = 500;
+
+	SetCommTimeouts(commHandle, &to);
 	SetCommState(commHandle, &commConfig.dcb);
 
 	SetupComm(commHandle, sizeof(OUTPUT_BUFFER), sizeof(OUTPUT_BUFFER));
