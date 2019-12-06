@@ -31,18 +31,24 @@ DWORD StateController::handleProtocolWriteEvents() {
 		switch (getState()) {
 		case STATES::IDLE:
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
-			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, INFINITE);
+			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
 			if (indexOfSignaledEvent == 0) {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				// Wait for ACK0/ACK1/ENQ from reading side to be signalled for timeout -- StateController 170
 			}
-			else {
+			else if (indexOfSignaledEvent == 1) { // receive ENQ
 				setState(PREP_RX);
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
 				setState(RTR);
+			}
+			else if (!outputBuffer.empty()) {
+				serv->drawStringBuffer("Bidding for channel and output buffer not empty", 'n');
+				sendCommunicationMessageToCommController(0); // sending ENQ
+				setState(PREP_TX);
+				ResetEvent(getEvents()->handles[0]);
 			}
 			break;
 		case STATES::RTR:
@@ -117,7 +123,8 @@ DWORD StateController::handleProtocolWriteEvents() {
 					sendCommunicationMessageToCommController(9);
 					std::random_device rdm;
 					std::mt19937 generator(rdm());
-					Sleep(distribution(generator));
+					//Sleep(distribution(generator));
+					Sleep(1500);
 					break;
 				}
 
@@ -131,6 +138,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			indexOfSignaledEvent = WaitForSingleObject(getEvents()->handles[2], 1500);
 			if (indexOfSignaledEvent == WAIT_TIMEOUT) {
 				serv->drawStringBuffer("Timed out from PREP_TX", 'n');
+				Sleep(1500); // this should be removed
 				setState(IDLE);
 				break;
 			}
@@ -186,19 +194,14 @@ void StateController::handleInput(char* input)
 		}
 		if (verifyInput(input) == 2) {
 			outputBuffer.pop();
-			if (releaseTX && ++reqCounter > 3) {
+			serv->drawStringBuffer("Receiving REQ", 'n');
+			if (++reqCounter > 3 || releaseTX) {
 				serv->drawStringBuffer("Switching out from REQ", 'n');
 				reqCounter = 0;
 				SetEvent(events->handles[9]);
 				break;
 			} 
 			SetEvent(events->handles[4]);
-		}
-		break;
-	case RTS:
-		if (verifyInput(input) == 2) {
-			outputBuffer.pop();
-			SetEvent(events->handles[3]);
 		}
 		break;
 	case PREP_TX:
@@ -222,7 +225,6 @@ void StateController::handleInput(char* input)
 		break;
 
 	case RTR:
-
 		//Is it an EOT
 		if (verifyInput(input)) {
 			ResetEvent(events->handles[5]);
@@ -232,7 +234,6 @@ void StateController::handleInput(char* input)
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
-			//serv->drawStringBuffer(input);
 			sess->writeToFile(input);
 			SetEvent(events->handles[6]); // Receive frame in RTR
 		}
@@ -245,18 +246,6 @@ int StateController::verifyInput(char* input) {
 	int i = *(input + 1);
 	switch (state) {
 	case TX:
-		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
-		// Method with logic to handle
-		// TODO: check to make sure this is standardized
-		// In TX state method returns 1 for ack, or 2 if Req is received, else 0 for false
-
-		//if (1) {
-
-			//if (strncmp(input, &ACK1, 2) == 0)
-			//	return 1;
-			//if (strncmp(input, &REQ1, 2) == 0)
-			//	return 2;
-	
 		if (i == REQ0) {
 			return 2;
 		}
@@ -344,7 +333,11 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		break;
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS || state == TX) {
-			comm->writeControlMessageToPort(&EOT);
+			std::string code;
+			for (int i = 0; code.size() < 1024; i++) {
+				code += EOT;
+			}
+			comm->writeFrameToPort(code);
 			serv->drawStringBuffer("RTS Done Sending Sending EOT Finished sending", 'n');
 			setState(IDLE);
 		}
