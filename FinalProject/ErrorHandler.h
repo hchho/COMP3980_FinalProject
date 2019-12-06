@@ -17,12 +17,19 @@
 -- PROGRAM:			DumbSerialPortEmulator
 --
 -- FUNCTIONS:
+--					static boolean verifyControl(char* input, const char* control)
+--					static BOOL verifyCommand(const char* input)
 --					VOID handleError(UINT errorCode)
---
+--					int checkSumCalculator(char* content)
+--					bool checksumMatch(char* content)
+--					std::string int_to_hex(int my_integer)
+--					int hex_to_int(char hexArray[])
 --
 -- DATE:			Sept 28, 2019
 --
--- REVISIONS:		(N/A)
+-- REVISIONS:		Dec 04, 2019
+-- REVISER:			Henry Ho, Chirag Fernandez
+-- DESCRIPTION:		Added CRC conversion and error calculation methods
 --
 -- DESIGNER:		Henry Ho
 --
@@ -30,7 +37,8 @@
 --
 -- NOTES:
 -- This is a public struct and should be able to be invoked anywhere in the application. The purpose is
--- to handle any error and use DisplayService to display to the user.
+-- to handle any error and use DisplayService to display to the user. This class has now been updated to handle
+-- the responsibilities of error checking for CRC values for 1024B checksums
 ----------------------------------------------------------------------------------------------------------------------*/
 struct ErrorHandler {
 
@@ -78,39 +86,78 @@ struct ErrorHandler {
 		}
 	}
 
-	/*
-	Verifies Commands code
-	Can rework to passs in state and then use a switch to verify if strcmp is taking too long
-	or might be easier to just have this pass in 2 params to do input plus expected
-	*/
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	verifyControl
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Chirag Fernandez
+	--
+	-- PROGRAMMER:	Chirag Fernandez
+	--
+	-- INTERFACE:	verifyControl(char* input, const char* control) 
+	--					char* input:	a char pointer to input to compare
+	--					char* control:	a char pointer to the desired control character to compare with
+	--
+	--
+	-- RETURNS:		bool
+	--					true if input and control is equal, else false
+	--
+	-- NOTES:
+	-- Call this function to verify that the input and control characters are equal
+	----------------------------------------------------------------------------------------------------------------------*/
 	static boolean verifyControl(char* input, const char* control) {
 		return strcmp(input, control);
 	}
 
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	verifyCommand
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Chirag Fernandez
+	--
+	-- PROGRAMMER:	Chirag Fernandez
+	--
+	-- INTERFACE:	verifyCommand(const char* input)
+	--					const char* input:	a char pointer to the the input
+	--
+	--
+	-- RETURNS:		bool
+	--					false
+	--
+	-- NOTES:
+	-- Call this function to veriy the command value
+	----------------------------------------------------------------------------------------------------------------------*/
 	static BOOL verifyCommand(const char* input) {
 		return false;
 	}
 
 	/*------------------------------------------------------------------------------------------------------------------
--- FUNCTION:	checkSumCalculator
---
--- DATE:		Nov 27, 2019
---
--- REVISIONS:	(N/A)
---
--- DESIGNER:	Chirag Fernandez
---
--- PROGRAMMER:	Chirag Fernandez
---
--- INTERFACE:	int checkSumCalculator(char* content, char* header)
---					char* content:	a char pointer to the the data word extracted from a received frame.
---
---
--- RETURNS:		int
---
--- NOTES:
--- Call this function to calculate the checksum for a given dataword in char array format.
-----------------------------------------------------------------------------------------------------------------------*/
+	-- FUNCTION:	checkSumCalculator
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Chirag Fernandez
+	--
+	-- PROGRAMMER:	Chirag Fernandez
+	--
+	-- INTERFACE:	unsigned int checkSumCalculator(char* content, char* header)
+	--					char* content:	a char pointer to the the data word extracted from a received frame.
+	--
+	--
+	-- RETURNS:		unsigned int
+	--					unsigned integer value of the checksum for the SYN, STX, and data bytes of a 1024B frame
+	--
+	-- NOTES:
+	-- Call this function to calculate the checksum for a given dataword in char array format.
+	----------------------------------------------------------------------------------------------------------------------*/
 	static unsigned int checkSumCalculator(std::string content) {
 
 		// Standard idiom for calculating a CRC-32 checksum using the boost library
@@ -138,7 +185,8 @@ struct ErrorHandler {
 	--					int checksum:	a base ten integer representing a checksum.
 	--					char* header:	a char pointer to the check sequence extracted from a received frame.
 	--
-	-- RETURNS:		void
+	-- RETURNS:		bool
+	--					returns true if the calculated checksum of the first 1019B matches the checksum in the frame payload
 	--
 	-- NOTES:
 	-- Call this function when you want to evaluate if two checksums/check sequences are equivalent.
@@ -147,13 +195,34 @@ struct ErrorHandler {
 
 		std::string contentToCheck = content.substr(0, 1019); // This substrings the entire frame minus the checksum and EOT
 		const unsigned int checkSumForReceivedFrame = checkSumCalculator(contentToCheck);
-		
+
 		std::string receivedChecksum = content.substr(1019, 4); // Minus EOT, last four bytes
 		const unsigned int convertedReceivedChecksum = char_to_int(receivedChecksum);
 
 		return checkSumForReceivedFrame == convertedReceivedChecksum;
 	}
 
+
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	getHexCRC
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Chirag Fernandez
+	--
+	-- PROGRAMMER:	Chirag Fernandez, Henry Ho
+	--
+	-- INTERFACE:	string getHexCRC(unsigned int decCRC)
+	--					unsigned int decCRC:		unsigned integer that contains the decimal value of the CRC
+	--
+	-- RETURNS:		string
+	--					hexadecimal string of the CRC converted from the decimal value
+	--
+	-- NOTES:
+	-- Call this function to convert the CRC value from integer to hexadecimal.
+	----------------------------------------------------------------------------------------------------------------------*/
 	static std::string getHexCRC(unsigned int decCRC)
 	{
 		char crcArr[5];
@@ -174,9 +243,27 @@ struct ErrorHandler {
 		return crcArr;
 	}
 
-	/*
-	This gets four bytes from the datagram and converts it to the int
-	*/
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	hex_to_int
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Henry Ho
+	--
+	-- PROGRAMMER:	Albert Liu, Henry Ho
+	--
+	-- INTERFACE:	char_to_int(std::string charArr)
+	--					string charArr - character array representing the calculated CRC value
+	--
+	-- RETURNS:		unsigned int
+	--					unsigned integer value of the hexadecimal CRC value
+	--
+	-- NOTES:
+	-- Call this function to convert the array of characters representing the CRC value hexadecimal. The hexadecimal is then
+	-- converted to an unsigned integer
+	----------------------------------------------------------------------------------------------------------------------*/
 	static unsigned int char_to_int(std::string charArr) {
 		// Get each char and translate them to a corresponding hex value
 		// Parse combine the string hex into one large string
@@ -193,6 +280,27 @@ struct ErrorHandler {
 		return hex_to_int(hexString);
 	}
 
+
+	/*------------------------------------------------------------------------------------------------------------------
+	-- FUNCTION:	hex_to_int
+	--
+	-- DATE:		Nov 27, 2019
+	--
+	-- REVISIONS:	(N/A)
+	--
+	-- DESIGNER:	Chirag Fernandez
+	--
+	-- PROGRAMMER:	Chirag Fernandez, Henry Ho
+	--
+	-- INTERFACE:	hex_to_int(std::string hexString)
+	--					string hexString - hexadecimal string representing the CRC value
+	--
+	-- RETURNS:		unsigned int
+	--					unsigned integer value of the hexadecimal CRC value
+	--
+	-- NOTES:
+	-- Call this function to convert the hexadecimal CRC string value to an unsigned integer
+	----------------------------------------------------------------------------------------------------------------------*/
 	static unsigned int hex_to_int(std::string hexString)
 	{
 		unsigned int x;
