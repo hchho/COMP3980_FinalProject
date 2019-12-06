@@ -377,10 +377,15 @@ int StateController::verifyInput(char* input) {
 		else if (i == ACK0 && syncBit == SYN1 || i == ACK1 && syncBit == SYN0) { // Receive flipped ACK for lost ACK state
 			// flip SYNCBIT
 			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit since I received a flipped ACK
+			return 1;
 		}
 		if (i == REQ0 && syncBit == SYN0 || i == REQ1 && syncBit == SYN1) {
 			return 2;
 		}
+		else if (i == ACK0 && syncBit == SYN1 || i == ACK1 && syncBit == SYN0) { // Receive flipped ACK for lost ACK state
+			// flip SYNCBIT
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit since I received a flipped ACK
+			return 2;
 		break;
 		//}
 		//else // SYNC BITS
