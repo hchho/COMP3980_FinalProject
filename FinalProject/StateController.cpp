@@ -199,8 +199,8 @@ DWORD StateController::handleProtocolWriteEvents() {
 					sendCommunicationMessageToCommController(9);
 					std::random_device rdm;
 					std::mt19937 generator(rdm());
-					//Sleep(distribution(generator));
-					Sleep(1500);
+					Sleep(distribution(generator) + 1000);
+					//Sleep(1500);
 					break;
 				}
 
@@ -420,8 +420,14 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 			setState(PREP_TX);
 		}
 		break;
+	
+	case 1: //IDLE_RECEIVE_ENQ
+		//output buffer is empty
+			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
+		
+		break;
 	case 5: //RTR_FILE_INPUT
-			// This is when we have a file to send Shouldn't be sending anyhting only changing our Reqs to ACKS
+		// This is when we have a file to send Shouldn't be sending anyhting only changing our Reqs to ACKS
 		if (state == IDLE) {
 			comm->writeControlMessageToPort(&ENQ);
 			setState(PREP_TX);
@@ -429,11 +435,6 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		else if (state == RX) {
 			comm->writeControlMessageToPort(&REQ0);
 			serv->drawStringBuffer("Sending REQ", 'n');
-		}
-		break;
-	case 1: //IDLE_RECEIVE_ENQ
-		if (outputBuffer.size() == 0) { //output buffer is empty
-			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
 		}
 		break;
 	case 6: //RTR_RECEIVE_FRAME
