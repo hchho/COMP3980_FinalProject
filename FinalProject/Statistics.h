@@ -15,6 +15,7 @@ private:
 	int AckCount;
 	int ReqCount;
 	int TimeoutCount;
+	int Timer;
 
 	DisplayService *disp;
 public:
@@ -25,11 +26,13 @@ public:
 		PacketAccepted(0),
 		AckCount(0),
 		ReqCount(0),
-		TimeoutCount(0)
+		TimeoutCount(0),
+		Timer(0)
 	{};
 
 	DWORD drawStatistics() {
 		while (1) {
+			std::string timer = "Timer: " + std::to_string(++Timer);
 			std::string ackSent = "Ack Sent: " + std::to_string(AckCount);
 			std::string reqSent = "Req Count: " + std::to_string(ReqCount);
 			std::string timeoutSent = "TimeoutCount: " + std::to_string(TimeoutCount);
@@ -43,6 +46,7 @@ public:
 				bitErrorRate += std::to_string(8 * 1024 * PacketRejected / (PacketRejected + PacketAccepted));
 			}
 
+			disp->drawStringBuffer(timer.c_str(), 'n');
 			disp->drawStringBuffer(ackSent.c_str(),'n');
 			disp->drawStringBuffer(reqSent.c_str(), 'n');
 			disp->drawStringBuffer(timeoutSent.c_str(), 'n');

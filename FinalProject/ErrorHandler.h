@@ -273,7 +273,7 @@ struct ErrorHandler {
 		std::string hexString;
 		std::stringstream stream;
 		for (int i = 0; i < 4; i++) {
-			stream << std::hex << (unsigned int)(unsigned char)charArr[i];
+			stream << std::setfill('0') <<std::setw(2)<< std::hex << (unsigned int)(unsigned char)charArr[i];
 		}
 		hexString += stream.str();
 
