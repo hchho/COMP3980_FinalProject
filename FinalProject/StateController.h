@@ -19,7 +19,7 @@ class StateController {
 
 private:
 	STATES state;
-	int synch;
+	int syncBit = 0;
 	int errorCount = 0;
 	int resentCounter = 0;
 	int reqCounter = 0;
@@ -41,7 +41,7 @@ private:
 	void handleControlCode(char* code);
 	void parseDataFrame(char* frame);
 	void sendCommunicationMessageToCommController(DWORD event);
-	void sendFrameToCommController(std::string data);
+	void sendFrameToCommController(std::string data, int syncBit);
 	int verifyInput(char* input);
 
 public:

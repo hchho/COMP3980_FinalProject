@@ -5,13 +5,13 @@
 #include "StateControllerHelper.h"
 
 /*------------------------------------------------------------------------------------------------------------------
--- SOURCE FILE:		StateController.cpp - A controller class that handles all the states in our system related to the data-link 
+-- SOURCE FILE:		StateController.cpp - A controller class that handles all the states in our system related to the data-link
 --										protocol and manages all events that are created.
 --
 -- PROGRAM:			DumbSerialPortEmulator
 --
 -- FUNCTIONS:
---					
+--
 --					DWORD handleProtocolWriteEvents()
 --					void handleControlCode(char* code)
 --					void handleInput(char* input)
@@ -34,8 +34,8 @@
 -- NOTES:
 -- The class is responsible for maintaining and updating the state of the current system in relation to the protocol.
 -- A singular instance of this class lives within the system when the application connects. All events are created and live
--- only within the StateController. Writing and reading of data in the physical layer are delegated to the CommController 
--- to perform the appropriate task. 
+-- only within the StateController. Writing and reading of data in the physical layer are delegated to the CommController
+-- to perform the appropriate task.
 ----------------------------------------------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------------------------------------------
@@ -50,15 +50,17 @@
 -- PROGRAMMER:	Albert Liu
 --
 -- INTERFACE:	VOID parseDataFrame(char* frame)
---						char* frame - the frame that will be unpacked 
+--						char* frame - the frame that will be unpacked
 --
 -- RETURNS:		void
 --
 -- NOTES:
--- Calling this function on a frame will unpack the frame into its respective segments: SYN, STX, Data, CRC, and EOT.
+-- Calling this function on a frame will unpack the frame into its respective segments: SYN, STX, Data, CRC, and EOT. This
+-- is used to generate the correct SYN bit that should be sent in the next message.
 ----------------------------------------------------------------------------------------------------------------------*/
 void StateController::parseDataFrame(char* frame)
 {
+	sHelper->unpackFrame(frame);
 	//CRC on frame using byte 1018-1022
 
 	//Read header
@@ -86,7 +88,7 @@ void StateController::parseDataFrame(char* frame)
 -- NOTES:
 -- Thread function that handles all writing events within the program. The system will infinitely loop while the program is
 -- running. The system immediately starts off in IDLE until a valid event(ENQ, FILE_INPUT, RTR_FILE_INPUT) is signaled to the system.
--- Based on the current state of the system and the event that is signaled, the system will send the corresponding data to the 
+-- Based on the current state of the system and the event that is signaled, the system will send the corresponding data to the
 -- writing port. Random timeout of the system is generated here when the current system is sending frames and receives consecutive REQs.
 ----------------------------------------------------------------------------------------------------------------------*/
 DWORD StateController::handleProtocolWriteEvents() {
@@ -98,10 +100,12 @@ DWORD StateController::handleProtocolWriteEvents() {
 	while (comm->getIsComActive()) {
 		switch (getState()) {
 		case STATES::IDLE:
+			// If in IDLE, next send event should always be SYN0
+			syncBit = 0;
 			// Two possible handles to be signaled: IDLE_RECEIVE_ENQ or IDLE_FILE_INPUT 
 			indexOfSignaledEvent = WaitForMultipleObjects(EVENT_COUNTS, getEvents()->handles, FALSE, 1000);
 			// Receive File input
-			if(indexOfSignaledEvent == 0) {
+			if (indexOfSignaledEvent == 0) {
 				sendCommunicationMessageToCommController(indexOfSignaledEvent);
 				setState(PREP_TX);
 				ResetEvent(getEvents()->handles[indexOfSignaledEvent]);
@@ -136,7 +140,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 			else if (indexOfSignaledEvent == 6) { // receive frame
 				setState(RX);
 				int indexToSend = outputBuffer.empty() ? 6 : 5; // If the output buffer is emtpy, we send an ACK, otherwise, we send a REQ
-				sendCommunicationMessageToCommController(indexToSend); 
+				sendCommunicationMessageToCommController(indexToSend);
 				ResetEvent(getEvents()->handles[indexToSend]);
 				setState(RTR);
 			}
@@ -164,7 +168,7 @@ DWORD StateController::handleProtocolWriteEvents() {
 				// Error Repeadtely sends 3 frames or else breaks
 				while (errorCounter++ < 3) {
 					// RELIES ON THE READING THREAD TO CALL outputBuffer.pop() when an ACK/REQ is received
-					sendFrameToCommController(outputBuffer.front());
+					sendFrameToCommController(outputBuffer.front(), syncBit);
 					setState(TX);
 					indexOfSignaledEvent = WaitForMultipleObjects(ACKNOWLEDGEMENT_HANDLES_COUNT, getEvents()->acknowledgementHandles, FALSE, 1500);
 
@@ -240,8 +244,8 @@ DWORD StateController::handleProtocolWriteEvents() {
 -- to package the frame, given only the pointer to the data stored in the output buffer. This function
 -- calls the CommController to perform the writing to the file (port).
 ----------------------------------------------------------------------------------------------------------------------*/
-void StateController::sendFrameToCommController(std::string data) {
-	std::string frame = sHelper->buildFrame(data);
+void StateController::sendFrameToCommController(std::string data, int syncBit) {
+	std::string frame = sHelper->buildFrame(data, syncBit);
 	comm->writeFrameToPort(frame);
 }
 
@@ -271,13 +275,16 @@ void StateController::handleInput(char* input)
 		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
 		// Method with logic to handle
 		// Verifies based on state  checks for synch bit as well
-		//Received AC0
+		//Received ACK0 or ACK1
 		if (verifyInput(input) == 1) {
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verified that I received the correct ACK(SYN)
 			outputBuffer.pop();
 			SetEvent(events->handles[3]);
 			break;
 		}
+		//Received ACK0 or ACK1
 		if (verifyInput(input) == 2) {
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verified that I received the correct REQ(SYN)
 			outputBuffer.pop();
 			serv->drawStringBuffer("Receiving REQ", 'n');
 			if (++reqCounter > 3 && releaseTX) {
@@ -285,14 +292,13 @@ void StateController::handleInput(char* input)
 				reqCounter = 0;
 				SetEvent(events->handles[9]);
 				break;
-			} 
+			}
 			SetEvent(events->handles[4]);
 		}
 		break;
 	case PREP_TX:
-		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
-		// Currently just expect an ACk either one will work
-		if (verifyInput(input) == 0 || verifyInput(input) == 1) {
+		// Expect only an ACK0 to get control of line Control Code Only 2 bytes
+		if (verifyInput(input) == 1) {
 			SetEvent(events->handles[2]);
 		}
 		else { // RECEIVED ENQ IN PREP_TX - timeout system for random duration
@@ -316,13 +322,26 @@ void StateController::handleInput(char* input)
 			SetEvent(events->handles[7]);
 		}
 		else {
-			std::string content(input,1024);
-			if (ErrorHandler::checksumMatch(content)) {
-				sess->writeToFile(content);
-				SetEvent(events->handles[6]); // Receive frame in RTR
+			
+
+			std::string content(input, 1024);
+			if (syncBit == input[0]) {
+				if (ErrorHandler::checksumMatch(content)) {
+
+					sess->writeToFile(content.substr(2,1017)); // Grabs Payload to write to file
+					SetEvent(events->handles[6]); // Receive frame in 
+				//  Maybe need to Clear input buffer. Discard frame
+				}
+				else if (syncBit != input[0]) { // check first char of the input data
+					syncBit = syncBit == 0 ? 1 : 0; // generate the opposite SYNC and send ACK alongside 
+					SetEvent(events->handles[6]);
+				}
+				else {
+					inputBuffer = { 0 }; // Clear input buffer. Discard frame
+				}
 			}
+			break;
 		}
-		break;
 	}
 }
 
@@ -349,24 +368,28 @@ int StateController::verifyInput(char* input) {
 	int i = *(input + 1);
 	switch (state) {
 	case TX:
-		if (i == REQ0) {
-			return 2;
-		}
-		if (i == REQ1) {
-			return 2;
-		}
-		if (i == ACK0) {
+		if (i == ACK0 && syncBit == SYN0 || i == ACK1 && syncBit == SYN1) {
 			return 1;
 		}
-		if (i == ACK1) {
+		else if (i == ACK0 && syncBit == SYN1 || i == ACK1 && syncBit == SYN0) { // Receive flipped ACK for lost ACK state
+			// flip SYNCBIT
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit since I received a flipped ACK
 			return 1;
-		}		
+		}
+		if (i == REQ0 && syncBit == SYN0 || i == REQ1 && syncBit == SYN1) {
+			return 2;
+		}
+		else if (i == ACK0 && syncBit == SYN1 || i == ACK1 && syncBit == SYN0) { // Receive flipped ACK for lost ACK state
+			// flip SYNCBIT
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit since I received a flipped ACK
+			return 2;
+		}
 		break;
 	case PREP_TX:
 		// Expect a ACK0 or ACK1 ?to get control of line Control Code Only 2 bytes
 		// Currently just expect an ACK either one will work
-		// HANDLE CONDITION FOR ENQ (SIMULTANEOUS BIDDING)
-		return i == ACK0 || i == ACK1;
+		// 0 = ack0, 1 = ack1, 2 = ENQ
+		return i == ACK0;
 	case IDLE:
 		//Expect a ENQ and only an ENQ Control Code only
 		return i == ENQ;
@@ -376,6 +399,7 @@ int StateController::verifyInput(char* input) {
 	}
 	return 0;
 }
+
 
 /*------------------------------------------------------------------------------------------------------------------
 -- FUNCTION:	sendCommunicationMessageToCommController
@@ -401,32 +425,28 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 	switch (event) {
 	case 0: //IDLE_FILE_INPUT
 		if (state == IDLE) {
-			comm->writeControlMessageToPort(&ENQ);
+			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ENQ);
 			setState(PREP_TX);
 		}
 		break;
 	case 1: //IDLE_RECEIVE_ENQ
-		comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
+		comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ACK0); // This should only be ACK0
 		break;
 	case 5: //RTR_FILE_INPUT
 	// This is when we have a file to send Shouldn't be sending anyhting only changing our Reqs to ACKS
 		if (state == IDLE) {
-			comm->writeControlMessageToPort(&ENQ);
+			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ENQ);
 			setState(PREP_TX);
 		}
 		else if (state == RX) {
-			comm->writeControlMessageToPort(&REQ0);
+			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &REQ0);
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
 			serv->drawStringBuffer("Sending REQ", 'n');
 		}
 		break;
 	case 6: //RTR_RECEIVE_FRAME
-		//Perform CRC Validation on received data
-		if (true) { // frame is valid
-			comm->writeControlMessageToPort(&ACK0); // This should either be ACK0 or ACK1
-		}
-		else {
-			inputBuffer = { 0 }; // Clear input buffer. Discard frame
-		}
+		comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ACK0); // This should either be ACK0 or ACK1
+		syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
 		break;
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS || state == TX) {
@@ -443,6 +463,12 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		return;
 	}
 }
+
+
+char calculateMSBofControlCode(int syncBit) {
+	return syncBit == 1 ? SYN1 : SYN0; // SYN0 == _NUL, covers all cases for control codes
+}
+
 
 void StateController::handleControlCode(char* code) {
 
