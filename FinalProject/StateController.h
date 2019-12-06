@@ -37,12 +37,7 @@ private:
 	StateControllerHelper* sHelper;
 	Statistics* stats;
 
-	// Handles data frame when in data read state and 
-	// 
 	void setState(STATES state) { this->state = state; };
-
-	void handleControlCode(char* code);
-	void parseDataFrame(char* frame);
 	void sendCommunicationMessageToCommController(DWORD event);
 	void sendFrameToCommController(std::string data, int syncBit);
 	int verifyInput(char* input);

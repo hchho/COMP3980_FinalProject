@@ -3,10 +3,32 @@
 #define STATISTICS_H
 
 #include <string>
+
+/*------------------------------------------------------------------------------------------------------------------
+-- HEADER FILE:		Statistics.h -	A service class that displays the protocol statistics to the screen
+--
+-- PROGRAM:			DumbSerialPortEmulator
+--
+-- FUNCTIONS:
+--					DWORD drawStatistics(void) 
+--					void incrementPacketSent(void)
+--					void incrementPacketRejected(void)
+--					void incrementPacketAccepted(void)
+--					void incrementAckCount(void)
+--					void incrementReqCount(void)
+--					void incrementTimeoutCount(void)
+--
+-- DATE:			Dec 05, 2019
+--
+-- DESIGNER:		Albert Liu
+--
+-- PROGRAMMER:		Albert Liu
+--
+-- NOTES:
+-- This service is used to contain display all the protocol statistics of the program.
+----------------------------------------------------------------------------------------------------------------------*/
 class Statistics {
 private:
-
-
 	int PacketSent;
 	int PacketRejected;
 	int PacketAccepted;
