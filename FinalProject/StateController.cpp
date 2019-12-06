@@ -275,15 +275,16 @@ void StateController::handleInput(char* input)
 		// Expect a REQ or ACK synch bit will be handled in statecontroller 2 bytes
 		// Method with logic to handle
 		// Verifies based on state  checks for synch bit as well
-		//Received AC0
+		//Received ACK0 or ACK1
 		if (verifyInput(input) == 1) {
-			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verified that I received the correct ACK(SYN)
 			outputBuffer.pop();
 			SetEvent(events->handles[3]);
 			break;
 		}
+		//Received ACK0 or ACK1
 		if (verifyInput(input) == 2) {
-			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct REQ(SYN)
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verified that I received the correct REQ(SYN)
 			outputBuffer.pop();
 			serv->drawStringBuffer("Receiving REQ", 'n');
 			if (++reqCounter > 3 && releaseTX) {
@@ -324,10 +325,26 @@ void StateController::handleInput(char* input)
 			//if(CRC Frame) should quick fail if other control character
 			//	Parse Frame
 			// Output Pop array also remember to delete pointers as they are dynamically allocated
-			sess->writeToFile(input);
-			SetEvent(events->handles[6]); // Receive frame in RTR
+					//Perform CRC Validation on received data && Perform check on SYNC
+			if (syncBit == input[0]) {
+				if (sHelper->ErrorHandler::checksumMatch(input)) {
+					sess->writeToFile(input);
+					SetEvent(events->handles[6]); // Receive frame in 
+				//  Maybe need to Clear input buffer. Discard frame
+				}
+				else if (syncBit != *input) { // check first char of the input data
+					syncBit = syncBit == 0 ? 1 : 0; // generate the opposite SYNC and send ACK alongside it
+
+					SetEvent(events->handles[6]);
+				}
+				else {
+					inputBuffer = { 0 }; // Clear input buffer. Discard frame
+				}
+				sess->writeToFile(input);
+				SetEvent(events->handles[6]); // Receive frame in RTR
+			}
+			break;
 		}
-		break;
 	}
 }
 
@@ -356,6 +373,10 @@ int StateController::verifyInput(char* input) {
 	case TX:
 		if (i == ACK0 && syncBit == SYN0 || i == ACK1 && syncBit == SYN1) {
 			return 1;
+		}
+		else if (i == ACK0 && syncBit == SYN1 || i == ACK1 && syncBit == SYN0) { // Receive flipped ACK for lost ACK state
+			// flip SYNCBIT
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit since I received a flipped ACK
 		}
 		if (i == REQ0 && syncBit == SYN0 || i == REQ1 && syncBit == SYN1) {
 			return 2;
@@ -421,18 +442,13 @@ void StateController::sendCommunicationMessageToCommController(DWORD event) {
 		}
 		else if (state == RX) {
 			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &REQ0);
+			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
 			serv->drawStringBuffer("Sending REQ", 'n');
 		}
 		break;
 	case 6: //RTR_RECEIVE_FRAME
-		//Perform CRC Validation on received data
-		if (true) { // frame is valid
-			syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
-			comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ACK0); // This should either be ACK0 or ACK1
-		}
-		else {
-			inputBuffer = { 0 }; // Clear input buffer. Discard frame
-		}
+		comm->writeControlMessageToPort(calculateMSBofControlCode(syncBit), &ACK0); // This should either be ACK0 or ACK1
+		syncBit = syncBit == 0 ? 1 : 0; // flip syncBit if I verify that I received the correct ACK(SYN)
 		break;
 	case 9: //RTS_DONE_SENDING 
 		if (state == RTS || state == TX) {
